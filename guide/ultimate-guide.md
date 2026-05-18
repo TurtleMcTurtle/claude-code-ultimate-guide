@@ -6146,8 +6146,7 @@ Understanding when each memory method loads is critical for token optimization:
 | `CLAUDE.md` | Session start | Always | Core project context |
 | `.claude/rules/*.md` | Session start (ALL files) | Always | Conventions that always apply |
 | `@path/to/file.md` | On-demand (when referenced) | Only when used | Optional/conditional context |
-| `.claude/commands/*.md` | Invocation only | Only when invoked | Workflow templates |
-| `.claude/skills/*.md` | Invocation only | Only when invoked | Domain knowledge modules |
+| `.claude/skills/*.md` | Invocation only | When invoked (`/name`) or auto-loaded | Workflow templates + knowledge modules |
 
 **Key insight**: `.claude/rules/` is NOT on-demand. Every `.md` file in that directory loads at session start, consuming tokens. Reserve it for always-relevant conventions, not rarely-used guidelines. Skills are invocation-only and may not be triggered reliably—one eval found agents invoked skills in only 56% of cases ([Gao, 2026](https://vercel.com/blog/agents-md-outperforms-skills-in-our-agent-evals)). Never rely on skills for critical instructions; use CLAUDE.md or rules instead.
 
@@ -7391,7 +7390,7 @@ _Quick jump:_ [Two Kinds of Skills](#50-two-kinds-of-skills) · [Understanding S
 
 ---
 
-> **Note (January 2026)**: Skills and Commands are being unified. Both now use the same invocation mechanism (`/skill-name` or `/command-name`), share YAML frontmatter syntax, and can be triggered identically. The conceptual distinction (skills = knowledge modules, commands = workflow templates) remains useful for organization, but technically they're converging. Create new ones based on purpose, not mechanism.
+> **CC 2.1.3 (January 2026)**: Skills and Commands are now unified. `.claude/commands/` is merged into `.claude/skills/`. Skills have two invocation modes: user-triggered (`/skill-name`, equivalent to old commands) and model-triggered (auto-loaded by description match). To restrict a skill to user-invocation only, add `disable-model-invocation: true` to its frontmatter. Existing files in `.claude/commands/` remain backward-compatible but all new development belongs in `.claude/skills/`.
 
 ---
 
@@ -7428,19 +7427,19 @@ Skills are knowledge packages that agents can inherit.
 | Concept | Purpose | Invocation |
 |---------|---------|------------|
 | **Agent** | Context isolation tool | Task tool delegation |
-| **Skill** | Knowledge module | `/skill-name` or auto-loaded |
-| **Command** | Process workflow | Slash command |
+| **Skill** | Knowledge module or workflow template | `/skill-name` (user) or auto-loaded (model) |
 
 #### Detailed Comparison
 
-| Aspect | Commands | Skills | Agents |
-|--------|----------|--------|--------|
-| **What it is** | Prompt template | Knowledge module | Context isolation tool |
-| **Location** | `.claude/commands/` | `.claude/skills/` | `.claude/agents/` |
-| **Invocation** | `/command-name` | `/skill-name` or auto-loaded | Task tool delegation |
+| Aspect | Skills (user-invocable) | Skills (model-invocable) | Agents |
+|--------|------------------------|--------------------------|--------|
+| **What it is** | Workflow template | Knowledge module | Context isolation tool |
+| **Location** | `.claude/skills/` | `.claude/skills/` | `.claude/agents/` |
+| **Invocation** | `/skill-name` (user types) | Auto-loaded by model | Task tool delegation |
+| **Frontmatter** | `disable-model-invocation: true` | Default (no flag needed) | n/a |
 | **Execution** | In main conversation | Loaded into context | Separate subprocess |
 | **Context** | Shares main context | Adds to agent context | Isolated context |
-| **Best for** | Repeatable workflows | Reusable knowledge | Scope-limited analysis |
+| **Best for** | Repeatable manual workflows | Reusable knowledge | Scope-limited analysis |
 | **Token cost** | Low (template only) | Medium (knowledge loaded) | High (full agent) |
 | **Examples** | `/commit`, `/pr`, `/ship` | TDD, security-guardian | security-audit, perf-audit |
 
@@ -7448,7 +7447,7 @@ Skills are knowledge packages that agents can inherit.
 
 ```
 Is this a repeatable workflow with steps?
-├─ Yes → Use a COMMAND
+├─ Yes → Use a SKILL (user-invocable, disable-model-invocation: true)
 │        Example: /commit, /release-notes, /ship
 │
 └─ No → Is this specialized knowledge multiple agents need?
@@ -8900,13 +8899,13 @@ cp -r /tmp/agent-skills/react-best-practices .claude/skills/
 
 ---
 
-# 6. Commands
+# 6. Commands (User-Invocable Skills)
 
 _Quick jump:_ [Slash Commands](#61-slash-commands) · [Creating Custom Commands](#62-creating-custom-commands) · [Command Template](#63-command-template) · [Command Examples](#64-command-examples)
 
 ---
 
-> **Note (January 2026)**: Skills and Commands are being unified. Both now use the same invocation mechanism (`/skill-name` or `/command-name`), share YAML frontmatter syntax, and can be triggered identically. The conceptual distinction (skills = knowledge modules, commands = workflow templates) remains useful for organization, but technically they're converging. Create new ones based on purpose, not mechanism.
+> **CC 2.1.3 (January 2026)**: Skills and Commands are now unified. `.claude/commands/` is merged into `.claude/skills/`. Skills have two invocation modes: user-triggered (`/skill-name`, equivalent to old commands) and model-triggered (auto-loaded by description match). To restrict a skill to user-invocation only, add `disable-model-invocation: true` to its frontmatter. Existing files in `.claude/commands/` remain backward-compatible but all new development belongs in `.claude/skills/`.
 
 ---
 
@@ -8916,7 +8915,7 @@ _Quick jump:_ [Slash Commands](#61-slash-commands) · [Creating Custom Commands]
 
 ## 6.1 Slash Commands
 
-Slash commands are shortcuts for common workflows.
+Slash commands are user-invocable skills. Since CC 2.1.3, they live in `.claude/skills/` (not `.claude/commands/`). The `/name` invocation syntax is unchanged. Add `disable-model-invocation: true` to a skill's frontmatter to make it user-only.
 
 ### Built-in Commands
 
@@ -9504,15 +9503,17 @@ This approach runs entirely offline without any Anthropic infrastructure and has
 
 > `/loop` added in v2.1.71. Timestamp markers in loop transcripts added in v2.1.86. Cloud and Desktop Scheduled Tasks launched March 9, 2026. Source: [code.claude.com/docs/en/whats-new](https://code.claude.com/docs/en/whats-new)
 
-### Custom Commands
+### User-Invocable Skills (formerly "Custom Commands")
 
-You can create your own commands in `.claude/commands/`:
+Since CC 2.1.3, user-invocable skills live in `.claude/skills/`:
 
 ```
-/tech:commit    → .claude/commands/tech/commit.md
-/tech:pr        → .claude/commands/tech/pr.md
-/product:scope  → .claude/commands/product/scope.md
+/tech:commit    → .claude/skills/tech/commit/SKILL.md
+/tech:pr        → .claude/skills/tech/pr/SKILL.md
+/product:scope  → .claude/skills/product/scope/SKILL.md
 ```
+
+Add `disable-model-invocation: true` to the frontmatter to prevent the model from auto-loading the skill when not explicitly invoked.
 
 ## 6.2 Creating Custom Commands
 
@@ -9521,14 +9522,14 @@ Commands are markdown files that define a process.
 ### Command File Location
 
 ```
-.claude/commands/
+.claude/skills/
 ├── tech/           # Development workflows
-│   ├── commit.md
-│   └── pr.md
+│   ├── commit/SKILL.md
+│   └── pr/SKILL.md
 ├── product/        # Product workflows
-│   └── problem-framer.md
+│   └── problem-framer/SKILL.md
 └── support/        # Support workflows
-    └── ticket-analyzer.md
+    └── ticket-analyzer/SKILL.md
 ```
 
 ### Command Naming
