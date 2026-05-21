@@ -899,6 +899,51 @@ Claude: Reads CLAUDE.md + @CLAUDE-api.md (relevant context only)
 
 ---
 
+## SDD vs TDD vs BDD
+
+As of 2026, spec-driven development has productized enough to compare it meaningfully against the older methodologies. The distinction is not which is better in the abstract — it is which artifact governs.
+
+| Methodology | Governing artifact | When it runs | Human role | Regen possible? |
+|-------------|-------------------|--------------|------------|-----------------|
+| TDD | Test suite | After code exists | Write tests first, then code | No — tests document what was built |
+| BDD | Gherkin (.feature files) | After code exists | Write scenarios, then automate | Partial — scenarios can drive codegen |
+| SDD | Spec file (natural language structured) | Before code exists | Write spec, approve contract | Yes — code is a derivable output of the spec |
+
+The practical implication of the SDD column: if the spec is the governing artifact, then code is in principle regenerable from the spec. Tessl takes this to the logical extreme with files marked `// GENERATED FROM SPEC - DO NOT EDIT`. Martin Fowler notes this is "spec-first" (code starts from spec) but not yet "spec-anchored" (spec and code stay synchronized automatically over time). No tool has solved spec drift reliably at production scale.
+
+Multi-file task failure rate without spec structure: pass@1 drops to 19.4% for multi-file infrastructure tasks versus 87% for isolated functions (Augment Code internal data, no published peer-reviewed study). The directional claim is credible — agents without persistent task context fail more often on tasks that span files and components. The specific numbers are vendor-sourced.
+
+### Factory.ai Missions architecture
+
+The most documented multi-agent SDD implementation in production. Architecture:
+
+1. **Orchestrator** translates requirements into behavioral validation contracts before any implementation begins.
+2. **Workers** implement features in parallel, each receiving a bounded task description from the contract.
+3. **Validator agents** (adversarial, independent) verify each implementation against the contract. They have no context from the workers — only the contract and the output.
+
+On a documented Slack clone project: validators caught 81 problems before any code merged, generating 34% of the total implementation work as "fix features." Median mission duration: 2 hours. The longest documented mission: 16 days. Factory.ai externalizes state in shared artifacts (validation contracts, feature lists, skill definitions) to survive context resets across multi-day missions.
+
+CLI reference (when using Factory.ai):
+
+```bash
+droid exec --mission path/to/mission.yaml    # Start a mission
+droid status                                  # Check active missions
+droid validate --mission-id <id>             # Run validators manually
+```
+
+### Spec drift: the open problem
+
+The risk that matters most in production: when the spec and the code diverge, agents regenerate bugs that were already fixed. Mitigation patterns:
+
+- Version the spec as a git artifact before any implementation commit.
+- Cursor `/evolve` command: updates the spec when the implementation intentionally departs from it.
+- Intent (agent): writes changes back to the spec during implementation, keeping both in sync.
+- GitHub Spec Kit: stores specs in `.specify/` as versioned files that CI can read.
+
+No tool has a reliable, widely-adopted mechanism for automated spec-code synchronization at long timescales. This is the primary open problem in SDD as of May 2026.
+
+---
+
 ## See Also
 
 - [../core/methodologies.md](../core/methodologies.md) — SDD and other methodologies

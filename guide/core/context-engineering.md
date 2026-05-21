@@ -1062,7 +1062,7 @@ This keeps the context system current without requiring large periodic overhauls
 
 ### The ACE Pipeline
 
-For teams that run Claude Code in automated or semi-automated workflows, the ACE pipeline provides a structured execution model:
+For teams that run Claude Code in automated or semi-automated workflows, the ACE pipeline provides a structured execution model. This is a config-persistence loop operating across sessions. It is distinct from arXiv:2510.04618 (Stanford/SambaNova, Oct 2025), which uses the same acronym for an inference-time context evolution technique. For the operational improvements that build on this pipeline, see Section 10 (Signal Taxonomy) and Section 11 (Loop Closure).
 
 ```
 Assemble → Check → Execute
@@ -1627,7 +1627,241 @@ Most teams move from Level 0 to Level 2 in a single afternoon. Moving from Level
 
 ---
 
-## 10. Token Audit Workflow
+## 10. Signal Taxonomy and Causal Attribution
+
+A flat friction score (errors × 3 + retries × 2) tells you how much friction happened but not which part of your configuration caused it. On a project running an ACE-v1 loop for ten weeks, this gap produced a misleading priority queue: Bash tool generated 3,377 retries vs 597 for Read vs 254 for Edit. Raw volume pointed at Bash as the problem, but the actual pattern was missing batching instructions, not a bad Bash rule. Without typed signals, a curator fixes the wrong layer.
+
+> A note on naming: arXiv:2510.04618 (Stanford/SambaNova, Oct 2025) uses "ACE" for an inference-time context evolution technique. The ACE described here is a config-persistence loop operating across sessions, not within them. Different concept, same acronym. The v2 improvements below apply to this guide's definition.
+
+### Signal Categories
+
+Replace the flat score with a five-category taxonomy. Each event gets a category and an attribution candidate.
+
+| Category | Definition | Example |
+|---|---|---|
+| **syntactic** | Tool error, parse failure, malformed call | `Invalid JSON in tool call` |
+| **semantic** | Output rejected by user, retry with clarification | "No, I meant the other format" |
+| **procedural** | Rule conflict, missing step, wrong execution phase | Write-before-Read violation |
+| **alignment** | Tone violation, out-of-scope change, hallucinated claim | Claude adds unrequested refactoring |
+| **performance** | Token overrun, context overflow, `/compact` forced mid-task | Session degrading at 85% context |
+
+Weighting should reflect impact, not frequency. A single alignment violation in a production-critical flow costs more than 50 syntactic retries on a local script.
+
+### Causal Attribution
+
+For each friction event, capture the active context: which rule files were loaded, which skills were invoked, and which profile was active. This lets the Curator build a rule-to-friction correlation table without running LLM-as-judge over the full session history.
+
+```yaml
+# friction-event schema
+id: evt_20260519_bash_batching_001
+timestamp: "2026-05-19T14:32:00Z"
+session_id: "2094ff6d"
+category: procedural
+tool: Bash
+retry_count: 4
+description: "Three sequential Bash calls where one batched call would have sufficed"
+active_rules:
+  - .claude/rules/lean-ctx.md
+  - .claude/rules/bash-safety.md
+active_skills: []
+profile: default
+suspected_cause: "lean-ctx.md missing explicit Bash batching instruction"
+resolved: false
+```
+
+Store events as append-only YAML files or newline-delimited JSON. They are the raw material for the Curator; keep them local and gitignore them by default unless your team chooses a shared signal store (see Section 11).
+
+### Per-Pattern Tracking
+
+Beyond individual events, track friction by pattern over time. Replace a weekly total with a dict:
+
+```yaml
+friction_patterns:
+  week: "2026-W20"
+  write_before_read: 10
+  gitignore_violation: 10
+  exit_code_1_unchecked: 38
+  bash_no_batching: 47
+  permission_denied_hook: 12
+```
+
+The pattern time series is what lets you measure whether a merged rule had any effect. Without it, you are guessing.
+
+---
+
+## 11. Loop Closure: PR-Based Curation
+
+The hidden failure mode at Level 5 is the open loop: the Curator generates suggestions but nothing gets merged. On the Aristote project over ten weeks of ACE-v1 operation, two curator reports separated by ten weeks proposed the same two rule candidates. Neither was merged. The loop was open, and the system produced reports instead of progress.
+
+Closing the loop requires making the Curator's output easy to act on. The mechanism: the Curator generates a Git PR rather than a plain report.
+
+### PR Anatomy
+
+Each Curator PR contains four things:
+
+1. **Config diff**: the exact rule or skill change proposed (a `git diff`-ready patch, not prose)
+2. **Friction evidence**: the 3-5 friction events that drove the suggestion, with event IDs linking back to the signal files
+3. **Canary results**: a before/after comparison on 10-20 probe prompts (see below)
+4. **Escalation note**: if this suggestion was already proposed in a previous report and not acted on, the PR includes a counter ("This suggestion appeared in 2 prior reports without action")
+
+A human reviews and merges or closes. The Curator never modifies rules directly. This is the "Augmented" in a mature context engineering workflow: the loop closes through human judgment, not automation.
+
+### A/B Canary Probes
+
+Before proposing a change, the Curator runs a small set of probe prompts against both the current config and the proposed config. Probes are simple, task-representative inputs that exercise the rule being changed.
+
+```bash
+# canary-ab.sh
+OLD_CONFIG="$1"
+NEW_CONFIG="$2"
+PROBES_FILE="${3:-canary-probes.yaml}"
+
+for probe in $(yq '.probes[].id' "$PROBES_FILE"); do
+  question=$(yq ".probes[] | select(.id == \"$probe\") | .prompt" "$PROBES_FILE")
+  old_out=$(run_with_config "$OLD_CONFIG" "$question")
+  new_out=$(run_with_config "$NEW_CONFIG" "$question")
+  compare_outputs "$probe" "$old_out" "$new_out"
+done
+```
+
+Ten to twenty probes per PR is sufficient. Use cosine similarity for a first pass; run LLM-as-judge only on probes where similarity drops below 0.85. This keeps canary costs near zero for most PRs and reserving judgment for the edge cases that actually warrant it.
+
+### Multi-timescale Operation
+
+Running the Curator on a single cadence produces two failure modes: too frequent and you overwhelm reviewers, too infrequent and friction accumulates invisibly. Use three loops:
+
+| Loop | Trigger | Action |
+|---|---|---|
+| Real-time | PostStop hook fires | Append friction event to local signal store |
+| Weekly | Cron (Saturday 02:00) | Curator aggregates the week, generates PR if signal threshold met |
+| Quarterly | Manual | Constitutional audit: check rule overlap, archive dormant skills, review profile consolidation candidates |
+
+The quarterly loop is not automatable in any useful way. It requires reading the system's actual behavior, not just its logged signals.
+
+### Signal Locality Decision
+
+Where friction signals live determines what the Curator can access. Three options:
+
+| Option | How it works | Best for |
+|---|---|---|
+| **A. Local cron** | Signals stay on the developer's machine; Curator runs as a macOS launchd job or local cron | Solo dev, privacy-first, no infra to maintain |
+| **B. Pushed signal store** | PostStop hook pushes anonymized signals to a private repo or S3 bucket; Curator runs in CI | Teams of 5+, multi-dev reconciliation required (Section 14) |
+| **C. Hosted dev env** | Signals land in a shared environment (Codespaces, Coder) by default | Teams already on hosted dev infrastructure |
+
+Option A is the right default for solo developers. Option B is necessary for any team that wants cross-developer pattern analysis or multi-dev profile reconciliation; the signal store should be a private repo, not a SaaS platform, to keep sensitive path and tooling data off third-party servers. Option C is only worth considering if the team is already committed to hosted dev environments for other reasons.
+
+### Suggestion Suppression
+
+A suggestion that appears in three consecutive reports without any action taken should change state: it either moves to "pending human decision" with a blocking flag in the next PR, or it gets closed as "won't fix" with a documented reason. Allowing suggestions to repeat silently is the same failure mode as the open loop, just more subtle.
+
+---
+
+## 12. Ejection: Disciplined De-engineering
+
+Every part of the context engineering stack helps you add more: more rules, more skills, more profile sections. None of it helps you remove what stopped working. This is the missing half of the discipline, and its absence is the reason Level 5 systems silently degrade.
+
+Context debt accumulates through addition. A rule written for a sprint six months ago may conflict with three newer rules, fire on edge cases the author never anticipated, and generate friction on every session. Without an ejection mechanism, it stays forever because removing it feels risky and auditing it takes time nobody has.
+
+### Ejection Heuristics
+
+Three metrics drive ejection candidates:
+
+**Activation threshold**: rules that have not fired in the past N months are likely dead weight. The signal: if the pattern they prevent hasn't appeared in the friction log, either the rule is working perfectly or nobody writes code that triggers it. Both cases suggest dormancy. Default: 3 months for skills, 6 months for rules.
+
+**ROI tracking**: skills where the friction they produce (from overly strict enforcement, wrong-context triggers) exceeds the friction they prevent. The signal: the skill appears in `active_skills` fields of friction events more often than it appears in "resolved" events. Negative ROI over 4+ weeks is an ejection candidate.
+
+**Profile overlap**: when a rule appears in more than 80% of individual developer profiles, it belongs in the shared config rather than in each profile. This is a consolidation proposal, not an ejection, but it reduces duplicate maintenance surface.
+
+### Ejection vs. Archive
+
+Ejection does not mean deletion. The Archive Pattern (Section 8) established the institutional memory reason for keeping retired rules with a retirement note. Ejection is the *automated detection* of what should be archived. The Curator flags candidates; a human makes the final call and moves the rule to `CLAUDE-archive.md` with a date and reason.
+
+No commercial observability tool (Braintrust, Langfuse, Helicone, LangSmith) implements this pattern. They track what happened; they do not track what your configuration contains nor suggest removing the parts of it that are causing harm. The ejection mechanism is the discipline that commercial tools skip because it requires knowing your config schema, not just your prompt history.
+
+---
+
+## 13. Constitutional and Self-consistency Audits
+
+A config that grows without constraint eventually contradicts itself. Rule A says "always use ESLint for formatting". Rule B says "prefer Biome for speed". A new developer reads both and does neither, because the rules conflict and the system gives no signal that they conflict. Constitutional audits catch this before it compounds.
+
+### Constitutional Audit
+
+Before each Curator PR lands, run a constraint check against two targets: the proposed change vs. the existing rule set, and the proposed change vs. an explicit `constitution.md`.
+
+```yaml
+# .claude/constitution.md (example)
+invariants:
+  - id: no-auto-commit
+    rule: "Never commit without explicit user request"
+    rationale: "2024-incident: automated commit bypassed review gate"
+  - id: no-destructive-without-confirm
+    rule: "Never run rm, DROP, or force-push without confirmation"
+    rationale: "Production safety baseline"
+  - id: diff-before-merge
+    rule: "Always show diff before applying multi-file changes"
+    rationale: "Preserves human review in the loop"
+```
+
+The constitutional check is two queries: does the proposed rule contradict any invariant, and does it conflict with any existing rule in `.claude/rules/`? Both queries can run as Claude prompts with the constitution and rule list as context. This costs a few hundred tokens per Curator run and prevents rule conflicts from silently accumulating.
+
+The lineage of this pattern is Constitutional AI (Anthropic, 2022) and RLAIF: using a high-level value document to constrain a lower-level generation process. The transposition here is from output alignment (checking a model's responses) to config alignment (checking a rule system's internal consistency). The mechanism is simpler because the inputs are shorter and fully deterministic.
+
+### Self-consistency Check
+
+Systems that modify themselves accumulate a specific failure mode: the documentation claims a state that no longer matches reality. On a production ACE installation, the file `ace-improvement-loop.md` claimed "skills versioning 100% complete as of 2026-03-04". The actual state, measured six weeks later, was 20 out of 114 skills versioned (17%). The gap persisted because nobody audited the claims the system made about itself.
+
+The self-consistency check runs weekly, separately from the Curator. It reads the claims in your ACE documentation and verifies them against the measured state:
+
+| Claim type | How to verify |
+|---|---|
+| "N rules active" | `find .claude/rules -name "*.md" \| wc -l` |
+| "Skills versioning X% complete" | `grep -l "^version:" .claude/skills/*/SKILL.md \| wc -l` divided by total skills |
+| "Last curator run: date" | Check the most recent Curator PR creation date in git log |
+| "Friction trending down" | Compare 4-week moving average from signal store |
+
+When a claim diverges from the measured state by more than 10%, the check appends a "Self-consistency violations" section to the next Curator report. This is not a failure state; it is the system doing its job. Documentation rot is normal. Catching it weekly is not.
+
+---
+
+## 14. Multi-dev Profile Reconciliation
+
+Profile-based assembly (Section 5) solves the N-devs × M-tools fragmentation problem by giving each developer a personal profile. Over time, a new problem emerges: individual profiles diverge. Developer A's profile adds a rule preventing direct production database access. Developer B adds the same rule two weeks later, worded slightly differently. Developer C never adds it. The rule that should be in the shared config ends up duplicated, inconsistent, and unenforceable.
+
+This is specific to hierarchical config systems like Claude Code's three-tier structure (user `~/.claude/CLAUDE.md` + project `CLAUDE.md` + plugin rules). No commercial LLMOps tool solves this because none of them operates at the granularity of individual rule files across a team's config hierarchy.
+
+### Detection
+
+The reconciliation check scans all active developer profiles and identifies rules that appear in more than 50% of them:
+
+```bash
+# profile-reconcile.sh
+PROFILES_DIR="${1:-.claude/profiles}"
+THRESHOLD="${2:-0.5}"
+
+all_rules=$(find "$PROFILES_DIR" -name "*.yaml" -exec yq '.includes[]' {} \; | sort | uniq -c | sort -rn)
+total_profiles=$(find "$PROFILES_DIR" -name "*.yaml" | wc -l)
+
+while IFS= read -r line; do
+  count=$(echo "$line" | awk '{print $1}')
+  rule=$(echo "$line" | awk '{print $2}')
+  ratio=$(echo "scale=2; $count / $total_profiles" | bc)
+  if (( $(echo "$ratio >= $THRESHOLD" | bc -l) )); then
+    echo "HOIST CANDIDATE ($count/$total_profiles profiles): $rule"
+  fi
+done <<< "$all_rules"
+```
+
+A rule that appears in 4 out of 5 developer profiles belongs in the project-level `CLAUDE.md`, not in four separate profiles.
+
+### Preservation
+
+Not everything should be hoisted. Personal preferences stay personal: tone settings, verbosity levels, preferred explanation depth, language choices. The reconciliation check distinguishes behavioral rules (what Claude does) from preference rules (how Claude communicates). Behavioral rules above the threshold are hoist candidates; preference rules are never touched.
+
+For a team of 5 or more developers, run the reconciliation check monthly. For teams above 10, run it as part of the quarterly constitutional audit. The output is a list of hoist candidates with a proposed diff for the shared config; a human reviews and applies. The check does not modify any file automatically.
+
+---
+
+## 15. Token Audit Workflow
 
 Context engineering theory only converts to real gains once you measure your actual overhead. Most developers discover they are loading 40-60K tokens of fixed context before any user task begins — configuration files, rules, hooks output, memory files, and the Claude Code system prompt all compound. This section provides a reproducible audit workflow that takes under five minutes and produces an actionable plan.
 
@@ -1816,7 +2050,7 @@ clearly whether the infrastructure investment is justified.
 
 ---
 
-## 11. Research Patterns: What the Literature Shows
+## 16. Research Patterns: What the Literature Shows
 
 Applied context engineering draws from academic research on how language models process long inputs. Four findings have practical implications for how you structure context in production agents.
 
@@ -1910,7 +2144,7 @@ The difference between claim-source mapping as a QA mechanism vs as a compliance
 
 ---
 
-## 12. Token Compression Tools
+## 17. Token Compression Tools
 
 The previous sections focus on what to put in context. This section covers tooling that compresses what enters context at the pipeline level — reducing token volume before Claude ever processes it. These tools complement CLAUDE.md authorship: good context engineering reduces noise at design time, compression tools reduce volume at runtime.
 

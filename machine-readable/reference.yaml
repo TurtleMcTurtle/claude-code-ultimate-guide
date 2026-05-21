@@ -83,6 +83,21 @@ deep_dive:
   context_engineering_lifecycle: "guide/core/context-engineering.md#6-context-lifecycle"
   context_engineering_quality: "guide/core/context-engineering.md#7-quality-measurement"
   context_engineering_reduction: "guide/core/context-engineering.md#8-context-reduction-techniques"
+  context_engineering_maturity: "guide/core/context-engineering.md#9-maturity-assessment"
+  context_engineering_maturity_description: "L0-L5 six-level maturity framework with self-assessment questions and recommended next actions per level."
+  context_signal_taxonomy: "guide/core/context-engineering.md#10-signal-taxonomy-and-causal-attribution"
+  context_signal_taxonomy_description: "Five-category friction signal taxonomy (syntactic/semantic/procedural/alignment/performance) + YAML event schema + per-pattern tracking dict. Replaces flat friction_score."
+  context_loop_closure: "guide/core/context-engineering.md#11-loop-closure-pr-based-curation"
+  context_loop_closure_description: "PR-based Curator mechanism: diff + canary A/B results + friction evidence + suggestion escalation. Multi-timescale (real-time/weekly/quarterly). Signal locality options (local cron / pushed store / hosted env)."
+  context_ejection: "guide/core/context-engineering.md#12-ejection-disciplined-de-engineering"
+  context_ejection_description: "Automated detection of dormant rules and negative-ROI skills for archival. Three heuristics: activation threshold, ROI tracking, profile overlap >80%."
+  context_self_audit: "guide/core/context-engineering.md#13-constitutional-and-self-consistency-audits"
+  context_self_audit_description: "Constitutional audit (pre-PR rule conflict check against constitution.md) + self-consistency check (weekly verification that ACE documentation claims match measured state)."
+  context_multidev_reconciliation: "guide/core/context-engineering.md#14-multi-dev-profile-reconciliation"
+  context_multidev_reconciliation_description: "Detection of rules present in >50% of individual profiles → hoist to shared config. Preserves personal preference rules. Bash script included."
+  context_engineering_token_audit: "guide/core/context-engineering.md#15-token-audit-workflow"
+  context_engineering_research: "guide/core/context-engineering.md#16-research-patterns-what-the-literature-shows"
+  context_engineering_compression_tools: "guide/core/context-engineering.md#17-token-compression-tools"
   context_engineering_audit_tool: "tools/context-audit-prompt.md"
   # Setup Audit Tool (orchestrates all audit skills)
   setup_audit_tool: "tools/audit-prompt.md"
@@ -92,6 +107,15 @@ deep_dive:
   setup_audit_delegated_skills: ["token-audit", "eval-rules", "eval-skills", "audit-agents-skills", "security-check"]
   setup_audit_scope_flag: "--include-global (extends to ~/.claude/ and ~/.claude.json)"
   setup_audit_time: "5-8 min (all skills installed) | 3-4 min (fallback mode)"
+  # Agent Harness Engineering (new May 2026)
+  agent_harness_guide: "guide/core/agent-harness.md"
+  agent_harness_nine_components: "guide/core/agent-harness.md#2-the-nine-components"
+  agent_harness_lethal_trifecta: "guide/core/agent-harness.md#3-the-lethal-trifecta-security-model"
+  agent_harness_cicd: "guide/core/agent-harness.md#4-cicd-agentic-patterns"
+  agent_harness_observability: "guide/core/agent-harness.md#6-observability-stack"
+  agent_harness_creator_verifier: "guide/core/agent-harness.md#8-creator-verifier-pattern"
+  agent_harness_three_properties: "guide/core/agent-harness.md#1-three-foundational-properties"
+  agent_harness_digital_twin: "guide/core/agent-harness.md#5-digital-twin-testing"
   context_engineering_examples: "examples/context-engineering/"
   context_engineering_assembler: "examples/context-engineering/assembler.ts"
   context_engineering_profile_template: "examples/context-engineering/profile-template.yaml"
@@ -276,6 +300,19 @@ deep_dive:
   learning_embracing_ai: "guide/roles/learning-with-ai.md:623"
   learning_30day_plan: "guide/roles/learning-with-ai.md:815"
   learning_red_flags: "guide/roles/learning-with-ai.md:612"
+  # AI Roles (guide/roles/ai-roles.md)
+  ai_roles_guide: "guide/roles/ai-roles.md"
+  ai_roles_spec_engineer: "guide/roles/ai-roles.md#17-spec-engineer"
+  ai_roles_agent_identity_architect: "guide/roles/ai-roles.md#18-agent-identity-architect"
+  ai_roles_eval_engineer: "guide/roles/ai-roles.md#19-ai-eval-engineer"
+  ai_roles_harness_engineer: "guide/roles/ai-roles.md#10-harness-engineer"
+  ai_roles_career_matrix: "guide/roles/ai-roles.md#20-career-decision-matrix"
+  # Adoption & L0-L5 (guide/roles/adoption-approaches.md)
+  adoption_guide: "guide/roles/adoption-approaches.md"
+  adoption_l0_l5_shapiro: "guide/roles/adoption-approaches.md#the-l0-l5-scale-where-is-your-team"
+  adoption_jcurve: "guide/roles/adoption-approaches.md#the-j-curve-you-will-hit-at-l2l3"
+  adoption_metr_rct: "guide/roles/adoption-approaches.md#the-metr-calibration"
+  adoption_deputydev: "guide/roles/adoption-approaches.md#deputydev-enterprise-cohort"
   # Productivity Research RCTs
   productivity_rct_metr: "guide/roles/learning-with-ai.md:925"  # METR 2025: experienced devs 19% slower on large codebases despite perceiving 20% faster
   productivity_rct_echoes: "guide/roles/learning-with-ai.md:926"  # Borg 2025: 30.7% faster (median), ~55.9% habitual users, no maintainability impact downstream

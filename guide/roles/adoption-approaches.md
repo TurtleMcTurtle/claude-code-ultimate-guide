@@ -391,6 +391,43 @@ But also: maybe you don't need more complexity. Simple setups work for many team
 
 ---
 
+## The L0-L5 Scale: Where Is Your Team?
+
+Dan Shapiro (CEO Glowforge) published this framework in January 2026, drawing an explicit parallel with the SAE autonomy levels for self-driving vehicles. The original publication is at [factorydark.com](https://factorydark.com). Simon Willison summarized it at [simonwillison.net/2026/Jan/28/the-five-levels](https://simonwillison.net/2026/Jan/28/the-five-levels/). The name "Five Levels" covers L0-L5 (six levels total).
+
+| Level | Label | What happens |
+|-------|-------|--------------|
+| L0 | Spicy Autocomplete | Code completion only. AI never sees your project context. GitHub Copilot used as a fast typist. |
+| L1 | Assistant | Chat-driven development. The developer queries AI for specific sub-tasks and pastes the result. No persistent context, no agentic loop. |
+| L2 | Agent-in-the-Loop | AI reads the codebase and executes multi-step tasks (Claude Code in basic use). Developer reviews each significant step. This is where most professional use sits today. |
+| L3 | Orchestrated Agents | Multiple agents run in parallel or sequence. Spec-driven workflows, harness infrastructure, systematic context management. Significant setup investment required. |
+| L4 | Semi-autonomous Factory | Agents complete features with minimal check-ins. Human involvement is specification and review, not implementation. Limited documented production examples. |
+| L5 | Dark Factory | Fully autonomous operation. Glowforge reported examples, but no published methodology with independent verification. No proven playbook for reaching this level in general-purpose software. |
+
+**Where real adoption sits in May 2026:** Stack Overflow 2025 survey (n=49,000+) records 84% of developers using or planning to use AI tools. JetBrains AI Pulse January 2026 (n=10,000+) shows 90%. But 77% say "vibe coding" is not part of their professional work, and only 31% use agents at all. A rough mapping: L0-L1 covers roughly 30-40% of developers, L2 accounts for 40-50%, L3 and above is under 10%.
+
+### The J-curve you will hit at L2→L3
+
+Moving from L2 to L3 requires investing in specs, context management, harness infrastructure, and team discipline before the productivity gains materialize. McElheran, Yang, Kroff, and Brynjolfsson (2025) studied this pattern across tens of thousands of US manufacturing plants using Census Bureau data: early AI adopters showed an average -1.33 point drop in total factor productivity before gains emerged. Younger organizations absorbed the transition faster than established ones. The J-curve is a structural feature of General Purpose Technology adoption, not a sign that something went wrong.
+
+**The METR calibration:** The only published RCT on AI developer productivity (METR, July 2025, n=16 experienced developers, 246 real tasks on mature open-source repos) measured a +19% slowdown when developers used AI, while those same developers believed they were 20% faster before the study and still believed they were 20% faster after finishing. The 39-point perception gap is not noise; it is a documented structural bias in self-assessment. METR's study covered developers operating primarily at L1-L2 with Cursor Pro and Claude 3.5/3.7 Sonnet. It does not say L3 is useless; it says that the L1-L2 layer is not delivering the claimed gains for experienced developers working on complex existing codebases.
+
+**DeputyDev enterprise cohort:** arXiv 2509.19708 tracked 300 engineers over 12 months (September 2024 to August 2025) with statistical controls on PR cycle time. Adoption curve: 4% in month 1, 83% by month 6, then stabilization at around 60% sustained use. A 31.8% reduction in PR cycle time (p=0.0018). This is observational, not a RCT, but it is the best longitudinal data available on team-level adoption.
+
+**What this means for your team:** Self-reported productivity gains in the 20-64% range that circulate from McKinsey, BCG, and GitHub's own studies are not replicated in controlled conditions. Use them as motivation, not as targets. The realistic trajectory follows the J-curve: a slowdown during transition, then sustained gains for teams who invest in the L3 infrastructure. The teams that skip the investment and stay at L2 rarely see the large efficiency claims materialize.
+
+### Level-specific guidance
+
+| Level | First investment that unlocks the next level |
+|-------|---------------------------------------------|
+| L0 → L1 | Add CLAUDE.md with project context. One hour. |
+| L1 → L2 | Install Claude Code. Run real tasks on real code with `/plan` and `/compact`. Two to three days of practice. |
+| L2 → L3 | Write structured specs before implementation. Learn context engineering basics. Commit to the L0→L5 maturity model. Weeks to months. |
+| L3 → L4 | Build or adopt a harness: while-loop engine, tool registry, session persistence, lifecycle hooks. Requires dedicated engineering time. |
+| L4 → L5 | No proven general playbook exists as of May 2026. Early examples are domain-specific. |
+
+---
+
 ## Quick Reference
 
 ### Useful Commands

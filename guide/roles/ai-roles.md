@@ -34,10 +34,13 @@ The AI wave didn't just create new tools. It created new jobs that didn't exist 
 14. [MLOps Engineer](#14-mlops-engineer)
 15. [AI Developer Advocate](#15-ai-developer-advocate)
 16. [AI Orchestration Engineer](#16-ai-orchestration-engineer)
-17. [Career Decision Matrix](#17-career-decision-matrix)
-18. [Salary Benchmarks (2025-2026)](#18-salary-benchmarks-2025-2026)
-19. [What's Not a Role (Yet)](#19-whats-not-a-role-yet)
-20. [Job Listings](#20-job-listings)
+17. [Spec Engineer](#17-spec-engineer)
+18. [Agent Identity Architect](#18-agent-identity-architect)
+19. [AI Eval Engineer](#19-ai-eval-engineer)
+20. [Career Decision Matrix](#20-career-decision-matrix)
+21. [Salary Benchmarks (2025-2026)](#21-salary-benchmarks-2025-2026)
+22. [What's Not a Role (Yet)](#22-whats-not-a-role-yet)
+23. [Job Listings](#23-job-listings)
 
 ---
 
@@ -104,6 +107,8 @@ Technical writer, QA engineer, domain expert (law, medicine, finance), content s
 ### What they do
 
 Context engineering is the evolution of prompt engineering. Where prompt engineers craft instructions, context engineers design **systems** that give AI models the right information, at the right time, in the right format. Andrej Karpathy explicitly moved from "vibe coding" framing to "context engineering" as the more precise description of this work.
+
+See the [Context Engineering reference](./context-engineering.md) for the full discipline — including the ACE pipeline (Section 6), the L0→L5 maturity model (Section 9), and the operational mechanisms that separate a Level 4 from a Level 5 system: signal taxonomy and causal attribution (Section 10), PR-based loop closure (Section 11), ejection of dormant rules (Section 12), constitutional audits (Section 13), and multi-dev profile reconciliation (Section 14).
 
 > "Context Engineering is providing the right information and tools, in the right format, at the right time." — Philipp Schmid, Google
 
@@ -606,7 +611,95 @@ Integration engineer, backend engineer with workflow automation experience, DevO
 
 ---
 
-## 17. Career Decision Matrix
+## 17. Spec Engineer
+
+**Status**: Emerging in 2026, growing alongside Spec-Driven Development adoption.
+
+### What they do
+
+Write the structured specifications that AI agents use to plan, implement, and validate code. As organizations move from L2 (assistant) to L3 (orchestrated agents) on the Shapiro scale, spec quality becomes the primary determinant of output quality. Spec Engineers are the "requirements analysts" of the agentic era: they bridge business intent and machine-executable contracts.
+
+### Core responsibility
+
+Writing specifications that satisfy three conditions simultaneously: precise enough for an agent to generate correct code from them, human-readable enough for a product manager to approve them, and stable enough to serve as the diff-able ground truth when the implementation drifts.
+
+GitHub Spec Kit formalizes this as a four-phase pipeline (Constitution, Specify, Plan, Tasks) where the spec file in `.specify/` is the governing artifact. Factory.ai Missions extends this with behavioral validation contracts written before any implementation begins. On a Slack clone, 81 problems were caught by independent validator agents from spec alone, generating 34% of the implementation work as "fix features."
+
+### Required skills
+
+| Technical | Soft |
+|-----------|------|
+| Structured writing (Gherkin-style Given-When-Then or equivalent) | Precision under ambiguity |
+| Understanding of agent failure modes (multi-file tasks fail at 19.4% pass@1 without spec) | Negotiation with product, engineering, and LLMs simultaneously |
+| Familiarity with SDD tools (Spec Kit, Kiro, Augment, Factory.ai) | Ability to distinguish what the spec must constrain vs what it should leave open |
+| Version control discipline (specs versioned before code) | |
+
+### Entry paths
+
+Technical writer with engineering background, QA engineer who understands requirements, product engineer frustrated by low signal-to-noise in AI outputs, business analyst moving into AI-adjacent work.
+
+---
+
+## 18. Agent Identity Architect
+
+**Status**: Critical gap. 77% of organizations have no formal agent identity strategy as of 2026.
+
+### What they do
+
+Design and enforce the identity layer for AI agents: how agents authenticate to services, what permissions they hold, how those permissions are scoped and audited, and how privilege escalation is prevented when agents chain tool calls across services.
+
+### Why this role exists now
+
+The Lethal Trifecta (Simon Willison, 2025): access to private data + exposure to untrusted content + capability for external communication = documented exfiltration vector. Most organizations understand the threat but have not built the defense. Strata Identity Research 2026 shows 44% of organizations are still using static API keys for agent authentication, 23% have a formal strategy, 18% rely on IAM trust inheritance with no per-agent scoping.
+
+### What the role covers
+
+- **Per-agent service principals**: Microsoft Entra Agent ID provides dedicated service principal types with OAuth On-Behalf-Of (OBO) flows scoped to specific session contexts. Not shared API keys, not team credentials.
+- **MCP gateway governance**: Every MCP tool call passes through an identity enforcement point that validates the calling agent's permissions against the current task scope.
+- **Session tracing**: Each action is attributable to a specific agent session, not just "the AI system."
+- **Privilege escalation prevention**: Sub-agents spawned by orchestrators cannot inherit parent permissions by default; they receive only the minimum scope for their task.
+
+### Required skills
+
+IAM and OAuth/OIDC expertise, zero-trust architecture, Kubernetes RBAC, understanding of MCP security model, incident response for non-deterministic systems.
+
+### Entry paths
+
+Cloud security engineer, identity/access management specialist, platform engineer with security focus.
+
+---
+
+## 19. AI Eval Engineer
+
+**Status**: Distinct from AI Safety & Eval (Section 12). This role focuses on production measurement, not lab safety.
+
+### What they do
+
+Build and operate the continuous measurement layer that tells the organization whether its AI systems are getting better or worse. Not red-teaming (that's AI Safety), not fine-tuning (that's LLM Engineer). Pure measurement: does the output quality hold up over time, across model upgrades, across traffic distribution shifts?
+
+### The structural problem they solve
+
+Anthropic's own data shows 93% of permission requests in production are approved without adequate review. JudgeBiasBench (arXiv 2604.23178) documents that LLM-as-judge systems have style bias scores of 0.76-0.92 and true negative rates below 25%, meaning they approve most incorrect outputs. These two facts together mean that relying on human review and LLM-as-judge alone is not a quality strategy. The Eval Engineer builds the third layer: structured evaluation pipelines with explicit pass/fail criteria that do not depend on human attention or LLM approval bias.
+
+### Responsibilities
+
+- Design evaluation frameworks with explicit metrics (task completion rate, tool correctness rate, hallucination rate)
+- Build canary pipelines that run A/B comparisons on 1-2% of production traffic before promoting model changes
+- Implement the creator-verifier pattern (independent agent checks agent outputs) for high-stakes workflows; independent verification improves correctness by +12 to +26% versus self-verification
+- Monitor for silent degradation: code generation quality that declines after a model update without any alarm firing
+- Maintain eval benchmarks that don't overfit to the current model's tendencies
+
+### Required skills
+
+Statistical experiment design, Python, understanding of LLM failure modes and bias patterns, CI/CD pipeline integration, working knowledge of OTel GenAI conventions (gen_ai.client spans are stable, gen_ai.agent spans are experimental as of May 2026).
+
+### Tools
+
+Arize Phoenix (1 trillion spans/month in production, self-hostable ELv2), Langfuse (OTel-native v3, MIT open-source), DeepEval (Python-native pytest integration), LangWatch Scenario SDK (multi-turn simulation), AWS Bedrock AgentCore (eval on 1-2% of live traffic).
+
+---
+
+## 20. Career Decision Matrix
 
 Which role fits your current background and goals?
 
@@ -623,6 +716,9 @@ Which role fits your current background and goals?
 | DevOps/platform engineer who wants to work with models | MLOps Engineer | 3-6 months upskill |
 | Engineer with public presence and community instincts | AI Developer Advocate | 6-12 months |
 | Integration or automation engineer adding AI | AI Orchestration Engineer | 3-6 months |
+| Technical writer or QA engineer with engineering background | Spec Engineer | 3-6 months |
+| Cloud/IAM security engineer moving into AI | Agent Identity Architect | 6-12 months |
+| Engineer who wants to measure AI quality rigorously | AI Eval Engineer | 3-6 months upskill |
 
 ### The fastest path to AI employment in 2025-2026
 
@@ -635,7 +731,7 @@ Note: 76% of candidates claiming AI expertise lack production-level deployment e
 
 ---
 
-## 18. Salary Benchmarks (2025-2026)
+## 21. Salary Benchmarks (2025-2026)
 
 > **Indicative only — large variance applies.** These figures are US market base salaries (2025-2026). Europe runs 30-50% lower, other markets 40-60% lower. Total compensation (equity, bonus, RSUs) can significantly exceed base, especially at startups and FAANG. Experience level, location within a country, company stage, and negotiation all create wide variance. Use these as orientation, not negotiation anchors.
 
@@ -656,12 +752,15 @@ Note: 76% of candidates claiming AI expertise lack production-level deployment e
 | MLOps Engineer | $110K-$150K | $150K-$200K | $200K-$270K | High demand in enterprises deploying at scale |
 | AI Developer Advocate | $120K-$160K | $160K-$220K | $220K-$300K | Active hiring at AI platforms |
 | AI Orchestration Engineer | $100K-$140K | $140K-$190K | $190K-$260K | Emerging — title varies across companies |
+| Spec Engineer | $90K-$130K | $130K-$180K | $180K-$250K | Often embedded in engineering teams, not standalone |
+| Agent Identity Architect | — | $170K-$240K | $240K-$340K | Senior only; deep IAM expertise required |
+| AI Eval Engineer | $110K-$150K | $150K-$210K | $210K-$290K | Growing rapidly as agentic systems reach production |
 
-> **Sources**: FinalRoundAI (2025), Alcor AI Salary Report (2025), RiseWorks AI Talent Report (2025), job postings analysis.
+> **Sources**: FinalRoundAI (2025), Alcor AI Salary Report (2025), RiseWorks AI Talent Report (2025), job postings analysis. New roles (Spec Engineer, Agent Identity Architect, AI Eval Engineer) are estimated from adjacent role benchmarks and emerging job postings — treat with wider margin.
 
 ---
 
-## 19. What's Not a Role (Yet)
+## 22. What's Not a Role (Yet)
 
 Some terms you'll hear that describe practices or methodologies, not job titles:
 
@@ -673,7 +772,7 @@ These terms are worth knowing (you'll encounter them in job descriptions and art
 
 ---
 
-## 20. Job Listings
+## 23. Job Listings
 
 > **Coming soon** — Curated listings for AI roles at companies building seriously with Claude Code and agentic AI.
 

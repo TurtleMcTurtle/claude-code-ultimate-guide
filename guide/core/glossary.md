@@ -21,7 +21,7 @@ Alphabetical reference for terms you will encounter throughout this guide. Cover
 | /clear | Slash command that resets the session entirely, discarding all conversation history. Context drops to 0%. | Claude Code | Commands |
 | /compact | Slash command that compresses conversation context by summarizing prior exchanges, freeing up context headroom without losing state. | Claude Code | Commands |
 | 150K ceiling | Practical effective context limit where output quality degrades, even when the nominal window is larger. See [context-engineering.md](./context-engineering.md). | Architecture | Context |
-| ACE pipeline | Assemble, Check, Execute — the three-phase lifecycle for intentional context management. See [context-engineering.md](./context-engineering.md). | AI Engineering | Context |
+| ACE pipeline | Assemble, Check, Execute — the three-phase config-persistence loop for intentional context management across sessions. Distinct from arXiv:2510.04618 (same acronym, inference-time context evolution, different concept). ACE-v2 adds signal taxonomy, PR-based loop closure, and ejection. See [context-engineering.md §§10-14](./context-engineering.md#10-signal-taxonomy-and-causal-attribution). | AI Engineering | Context |
 | Act Mode | Normal execution mode where Claude can read, write, and run commands. Opposite of Plan Mode. | Claude Code | Modes |
 | Adaptive thinking | Opus 4.6 feature: dynamically adjusts reasoning depth based on detected task complexity, without manual configuration. | Models | Thinking |
 | Agent | A specialized AI persona defined in a markdown file with a role, tool list, and behavioral instructions. Stored in `.claude/agents/`. | Claude Code | Extensibility |
