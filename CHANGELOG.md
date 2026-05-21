@@ -29,6 +29,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - **Landing nav and banner**: Replaced "Learning" with "Context" in main nav; reordered More dropdown (AI Roles, Methodologies, Ecosystem, Releases, Compare, Diagrams, Team Metrics, Glossary, FAQ, RSS Feed); updated announcement banner to highlight Agent Harness Engineering, ACE-v2, and new AI roles; fixed banner deep link from `/guide/core/agent-harness` to `/guide/agent-harness/` (guide files served flat by prepare-guide-content.mjs).
 
+- **Quiz category 16 "Agent Harness & Context"**: 35 new questions covering Agent Harness Engineering (9-component framework, Lethal Trifecta, CI/CD patterns, creator-verifier +12 to +26%, Safe Outputs toolchain, OTel GenAI status), Context Engineering (L0-L5 maturity scale, ACE-v2 signal taxonomy, loop closure PR curation, ejection thresholds, constitutional audits, self-consistency check, multi-dev profile reconciliation), and the three new AI roles (Spec Engineer, Agent Identity Architect, AI Eval Engineer). Quiz total 271 to 306 questions.
+
 - **Claude Code Releases**: Updated tracking to v2.1.146 (2026-05-21)
   - v2.1.146: `/simplify` renamed to `/code-review` with optional effort level; auto mode no longer suppresses AskUserQuestion; Windows PowerShell regression fix; 15+ bug fixes
   - v2.1.145: `claude agents --json` for scripting; `/plugin` previews before install; security fix for Bash permission-prompt bypass; MCP paginated resources fix; 20+ bug fixes
