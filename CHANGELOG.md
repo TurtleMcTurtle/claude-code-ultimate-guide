@@ -16,7 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- **Auto mode section expanded** (`guide/ultimate-guide.md`, `guide/cheatsheet.md`): Rewrote the auto mode section (was ~30 lines, now ~80 lines) to cover the two-layer architecture (input probe + Sonnet 4.6 transcript classifier), the three classifier categories (scope escalation, untrusted infrastructure, prompt injection), Anthropic's performance numbers (94% detection rate, 17% FNR on production traffic), independent stress-test findings (arXiv 2604.04978: 81% FNR on adversarial workloads, 92.9% FNR gap on file edits exempt from classification), escalation mechanism (3 consecutive or 20 total blocks), red spinner visual signal, `autoMode.allow/soft_deny/environment` settings with `"$defaults"` sentinel, and a when-to-use taxonomy table. Added auto mode row to the cheatsheet permission modes table.
+- **Auto mode documentation expanded across 4 files**: Comprehensive update covering two-layer architecture (input probe + Sonnet 4.6 transcript classifier), three classifier categories (scope escalation, untrusted infrastructure, prompt injection), Anthropic's production numbers (94% detection, 17% FNR), independent stress-test findings (arXiv 2604.04978: 81% FNR on adversarial workloads, 92.9% FNR gap on file edits exempt from classification), escalation mechanism (3 consecutive or 20 total blocks), red spinner signal, `autoMode.allow/soft_deny/environment` with `"$defaults"` sentinel, and when-to-use taxonomy.
+  - `guide/ultimate-guide.md`: Section rewritten from ~30 to ~80 lines
+  - `guide/cheatsheet.md`: Auto mode row added to permission modes table
+  - `whitepapers/fr/03-securite.qmd`: New "Mode Auto: délégation et limites réelles" subsection; sandbox Modes bullet fixed (was conflating sandbox auto-allow with auto mode permission feature); PermissionDenied hook updated
+  - `whitepapers/en/03-security.qmd`: Same changes in English
 
 - **Pinning Opus 4.6 (Community Hack)** (`guide/ultimate-guide.md`): Added subsection in the OpusPlan Mode area documenting three ways to force Opus 4.6 instead of 4.7 (settings.json direct, OpusPlan hybrid via `ANTHROPIC_DEFAULT_OPUS_MODEL`, per-session `/model`). Documents the trade-offs: losing `xhigh`/`max` effort levels and the newer knowledge cutoff. Added cross-reference from the pricing section.
 
