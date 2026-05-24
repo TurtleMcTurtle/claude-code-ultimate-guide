@@ -154,8 +154,10 @@ If you only have time for 5 sections:
   - [2.7 Configuration Decision Guide](#27-configuration-decision-guide)
   - [2.8 Structured Prompting with XML Tags](#28-structured-prompting-with-xml-tags)
   - [2.9 Semantic Anchors](#29-semantic-anchors)
-  - [2.10 Data Flow & Privacy](#210-data-flow--privacy)
-  - [2.11 Under the Hood](#211-under-the-hood)
+  - [2.10 Prompt Engineering Patterns](#210-prompt-engineering-patterns)
+  - [2.11 Structured Outputs & Schema Design](#211-structured-outputs--schema-design)
+  - [2.12 Data Flow & Privacy](#212-data-flow--privacy)
+  - [2.13 Under the Hood](#213-under-the-hood)
 - [3. Memory & Settings](#3-memory--settings) `🟢 Beginner` `⏱ 30 min`
   - [3.1 Memory Files (CLAUDE.md)](#31-memory-files-claudemd)
   - [3.2 The .claude/ Folder Structure](#32-the-claude-folder-structure)
@@ -1705,7 +1707,7 @@ Before your next session, verify:
 
 # 2. Core Concepts
 
-_Quick jump:_ [The Interaction Loop](#21-the-interaction-loop) · [Context Management](#22-context-management) · [Plan Mode](#23-plan-mode) · [Rewind](#24-rewind) · [Model Selection](#25-model-selection--thinking-guide) · [Mental Model](#26-mental-model) · [Config Decision Guide](#27-configuration-decision-guide) · [Data Flow & Privacy](#210-data-flow--privacy)
+_Quick jump:_ [The Interaction Loop](#21-the-interaction-loop) · [Context Management](#22-context-management) · [Plan Mode](#23-plan-mode) · [Rewind](#24-rewind) · [Model Selection](#25-model-selection--thinking-guide) · [Mental Model](#26-mental-model) · [Config Decision Guide](#27-configuration-decision-guide) · [Prompt Engineering Patterns](#210-prompt-engineering-patterns) · [Data Flow & Privacy](#212-data-flow--privacy)
 
 ---
 
@@ -4333,7 +4335,331 @@ Semantic anchors work powerfully with XML-structured prompts (Section 2.8):
 
 > **Source**: Concept by Alexandre Soyer. Original catalog: [github.com/LLM-Coding/Semantic-Anchors](https://github.com/LLM-Coding/Semantic-Anchors) (Apache-2.0)
 
-## 2.10 Data Flow & Privacy
+## 2.10 Prompt Engineering Patterns
+
+Two prompt-level techniques that close the gap between well-structured prompts and reliably accurate outputs: few-shot examples for calibrating format and style, and validation retry loops for catching and correcting extraction failures.
+
+---
+
+### Few-Shot Prompting
+
+Few-shot examples show the model what correct output looks like before it processes the actual input. They are most effective for establishing output format, tone calibration, and input-specific processing style. They cannot enforce business rules or guarantee compliance; use schema validation for that.
+
+**Optimal count:** 2-4 examples. Below 2, the pattern is too weak to anchor behavior. Above 4, the examples consume context budget without proportional improvement, and the model may pattern-match too literally on superficial features.
+
+**Message-pair format for tool use:**
+
+When the task involves tool calls, examples must include the full exchange, not just user inputs and final text outputs:
+
+```python
+messages = [
+    # Example 1
+    {"role": "user", "content": "Invoice: Acme Corp, 15 Jan 2025, $4,200.00"},
+    {"role": "assistant", "content": [
+        {
+            "type": "tool_use",
+            "id": "toolu_01",
+            "name": "extract_invoice",
+            "input": {
+                "vendor": "Acme Corp",
+                "date": "2025-01-15",
+                "amount": 4200.00
+            }
+        }
+    ]},
+    {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_01", "content": "OK"}]},
+    # Example 2 (null handling)
+    {"role": "user", "content": "Invoice: no vendor listed, 22 Feb 2025, €892"},
+    {"role": "assistant", "content": [
+        {
+            "type": "tool_use",
+            "id": "toolu_02",
+            "name": "extract_invoice",
+            "input": {
+                "vendor": null,
+                "date": "2025-02-22",
+                "amount": 892.00
+            }
+        }
+    ]},
+    {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_02", "content": "OK"}]},
+    # Actual task
+    {"role": "user", "content": f"Invoice: {actual_invoice_text}"}
+]
+```
+
+The second example above demonstrates null handling explicitly. Without it, the model may invent a vendor name rather than returning null for an ambiguous field.
+
+**Calibrating false positive rates:**
+
+In CI-style review tasks (security scanning, code quality checks, compliance checks), false positives destroy trust faster than false negatives. A few-shot example set that includes a near-miss that should NOT trigger an alert teaches the boundary explicitly:
+
+```python
+# In the system prompt or early in the conversation:
+CALIBRATION_EXAMPLES = """
+Examples of what triggers a HIGH severity flag vs what does not:
+
+Example 1 (HIGH, triggers):
+Input: SELECT * FROM users WHERE id = ' + user_input + '
+Reason: Direct string concatenation in SQL, classic injection vector.
+
+Example 2 (NOT flagged, near-miss):
+Input: query = f"SELECT * FROM users WHERE id = {user_id}"
+Reason: f-string with a typed integer variable. No injection risk if user_id is
+validated upstream. Untyped string concatenation = flag; typed variable
+interpolation = safe.
+
+Example 3 (HIGH, triggers):
+Input: os.system(request.GET['cmd'])
+Reason: Direct shell execution from unsanitized request parameter.
+"""
+```
+
+Near-miss examples reduce false positive rates by teaching the model where the actual boundary sits, not just what a clear violation looks like.
+
+**Limits of few-shot:**
+
+Few-shot examples teach style and format. They cannot enforce schema constraints (use `strict: true` for that), guarantee business rule compliance (use a programmatic validator), or replace explicit instructions. If the rule needs to hold without exception, state it as a rule, not just as an example.
+
+---
+
+### Validation Retry Loop
+
+The validation retry loop catches structured extraction failures programmatically and feeds specific error feedback back to the model for regeneration, rather than silently discarding bad output or failing the whole task.
+
+**Three-attempt budget:**
+
+```python
+from dataclasses import dataclass
+
+@dataclass
+class ExtractionResult:
+    success: bool
+    data: dict | None
+    error: str | None
+    attempts: int
+
+def extract_with_retry(
+    client,
+    document: str,
+    schema_validator,
+    max_attempts: int = 3
+) -> ExtractionResult:
+    messages = [{"role": "user", "content": f"Extract fields from:\n\n{document}"}]
+
+    for attempt in range(1, max_attempts + 1):
+        response = client.messages.create(
+            model="claude-opus-4-5",
+            max_tokens=1024,
+            tools=[EXTRACTION_TOOL],
+            tool_choice={"type": "tool", "name": "extract_fields"},
+            messages=messages
+        )
+
+        raw_output = response.content[0].input
+        errors = schema_validator.validate(raw_output)
+
+        if not errors:
+            return ExtractionResult(
+                success=True, data=raw_output, error=None, attempts=attempt
+            )
+
+        if attempt == max_attempts:
+            break
+
+        # Feed specific errors back, not a generic "try again"
+        error_feedback = format_errors(errors, raw_output)
+        messages.extend([
+            {"role": "assistant", "content": response.content},
+            {
+                "role": "user",
+                "content": (
+                    f"The extraction has {len(errors)} validation error(s):\n\n"
+                    f"{error_feedback}\n\n"
+                    f"Please correct these specific issues and re-extract."
+                )
+            }
+        ])
+
+    return ExtractionResult(
+        success=False, data=None,
+        error=f"Failed after {max_attempts} attempts: {errors}",
+        attempts=max_attempts
+    )
+
+def format_errors(errors, raw_output):
+    lines = []
+    for err in errors:
+        lines.append(f"- Field `{err.field}`: {err.message}")
+        if err.field in raw_output:
+            lines.append(f"  Got: {raw_output[err.field]!r}")
+    return "\n".join(lines)
+```
+
+**The feedback triple matters.** Effective retry feedback includes (1) the original document excerpt where the issue occurred, (2) the failed JSON the model produced, and (3) a specific error list per field. Vague feedback ("please try again, there were errors") degrades into random variation. Specific feedback ("field `date` expected ISO 8601, got '15th January'") almost always resolves on the second attempt.
+
+**When source data is absent:**
+
+If the document genuinely does not contain the required field, a retry loop will not help. The model will keep hallucinating or oscillating between null and invented values. Exit condition: if the same field fails twice with different invented values, mark it as `absent_from_source` and move on. Do not burn the full 3-attempt budget on a field that isn't there.
+
+```python
+def is_hallucination_cycle(error_history: list[dict], field: str) -> bool:
+    values = [h.get(field) for h in error_history if h.get(field) is not None]
+    # Two different non-null values for the same field across attempts = hallucination
+    return len(set(str(v) for v in values)) > 1
+```
+
+**Graceful degradation with human review routing:**
+
+When the retry budget is exhausted, route to human review rather than silently dropping the document:
+
+```python
+result = extract_with_retry(client, document, validator)
+
+if not result.success:
+    human_review_queue.append({
+        "document_id": doc_id,
+        "document": document,
+        "last_attempt": result.error,
+        "attempts": result.attempts,
+        "requires_human": True
+    })
+    metrics.increment("extraction.failed", tags={"reason": "max_retries"})
+```
+
+---
+
+### Self-Review Contamination
+
+Asking the same model instance that generated an output to review its own output produces results with a 15-30% self-preference bias: the model tends to agree with itself, finding the generated content "correct" at rates above what independent reviewers would. The context window shared between generation and review is the contamination vector.
+
+**Mitigation: independent review instance**
+
+```python
+# Generation pass
+generation_response = client.messages.create(
+    model="claude-opus-4-5",
+    max_tokens=2048,
+    messages=[
+        {"role": "user", "content": f"Analyze this contract:\n\n{contract_text}"}
+    ]
+)
+analysis = generation_response.content[0].text
+
+# Review pass: fresh conversation, no generation context
+review_response = client.messages.create(
+    model="claude-opus-4-5",
+    max_tokens=1024,
+    system="You are a critical reviewer. Identify gaps, errors, and unsupported claims.",
+    messages=[
+        {
+            "role": "user",
+            "content": (
+                f"Review this contract analysis for accuracy:\n\n"
+                f"CONTRACT:\n{contract_text}\n\n"
+                f"ANALYSIS TO REVIEW:\n{analysis}\n\n"
+                f"Identify any errors, gaps, or claims not supported by the contract text."
+            )
+        }
+    ]
+)
+```
+
+The review instance receives the source document and the generated analysis but has no memory of generating it. This eliminates the self-preference bias almost entirely. Use it for high-stakes extraction (legal, financial, medical), customer-facing content where errors damage trust, and any task where undetected hallucination is not acceptable.
+
+---
+
+### Inline Reasoning for Triage
+
+For borderline classifications, a `reasoning` field in the output schema surfaces the evidence chain that produced the classification. This is not chain-of-thought prompting; it is a structured output field that forces the model to articulate the key evidence before committing to a label.
+
+```json
+{
+    "classification": {"type": "string", "enum": ["urgent", "standard", "low"]},
+    "reasoning": {
+        "type": "string",
+        "description": "The specific evidence from the input that determined this classification"
+    },
+    "confidence": {"type": "number"}
+}
+```
+
+When `classification: "urgent"` and `reasoning: "customer explicitly states production outage affecting 10,000 users"`, a downstream filter can verify the classification in one read. When `reasoning` is vague or circular ("classified as urgent because it seems urgent"), that is a reliable signal to escalate for human review regardless of the confidence score.
+
+---
+
+## 2.11 Structured Outputs & Schema Design
+
+Schema design determines how much of the extraction burden falls on the model versus on downstream validation. Good schemas express what the model genuinely knows; bad schemas force the model to invent values for fields it cannot find.
+
+---
+
+### Confidence Calibration
+
+A confidence score of 0.9 means nothing without a labeled validation set showing that fields labeled 0.9 by this model are actually correct 90% of the time. Uncalibrated confidence scores create a false sense of accuracy.
+
+**Building a calibration baseline:**
+
+```python
+from collections import defaultdict
+
+def calibrate_confidence(
+    model_outputs: list[dict],
+    ground_truth: list[dict],
+    field: str,
+    bucket_size: float = 0.1
+) -> dict:
+    buckets = defaultdict(lambda: {"correct": 0, "total": 0})
+
+    for output, truth in zip(model_outputs, ground_truth):
+        conf = output.get("confidence", 0.5)
+        bucket = round(conf / bucket_size) * bucket_size
+        buckets[bucket]["total"] += 1
+        if output.get(field) == truth.get(field):
+            buckets[bucket]["correct"] += 1
+
+    return {
+        bucket: {
+            "accuracy": data["correct"] / data["total"] if data["total"] > 0 else 0,
+            "samples": data["total"]
+        }
+        for bucket, data in sorted(buckets.items())
+    }
+
+# Example output:
+# {0.9: {"accuracy": 0.91, "samples": 234}}  <- well-calibrated
+# {0.9: {"accuracy": 0.63, "samples": 234}}  <- overconfident, needs adjustment
+```
+
+**Per-field thresholds:**
+
+Different fields have different error costs. A wrong vendor name on an invoice is annoying; a wrong total amount is a financial error. Set per-field confidence thresholds that route to human review when not met:
+
+```python
+REVIEW_THRESHOLDS = {
+    "vendor_name": 0.70,
+    "invoice_date": 0.80,
+    "total_amount": 0.95,  # high bar: financial field
+    "line_items": 0.85
+}
+
+def needs_review(extraction: dict, confidence_scores: dict) -> list[str]:
+    return [
+        field
+        for field, threshold in REVIEW_THRESHOLDS.items()
+        if confidence_scores.get(field, 0) < threshold
+    ]
+```
+
+**Accuracy vs confidence plots:**
+
+Plot model confidence on the x-axis against actual accuracy on the y-axis. A perfectly calibrated model follows the diagonal. Systematic overconfidence shows up as a curve below the diagonal; systematic underconfidence shows as a curve above it. Both can be corrected with temperature adjustment or post-hoc calibration (Platt scaling).
+
+Calibrate on at least 200 labeled examples per field to get statistically meaningful buckets. Below 100 examples, bucket accuracy estimates are too noisy to act on.
+
+---
+
+## 2.12 Data Flow & Privacy
 
 > **Important**: Everything you share with Claude Code is sent to Anthropic servers. Understanding this data flow is critical for protecting sensitive information.
 
@@ -4389,7 +4715,7 @@ When you use Claude Code, the following data leaves your machine:
 
 > **Full guide**: For complete privacy documentation including known risks, community incidents, and enterprise considerations, see [Data Privacy & Retention Guide](./security/data-privacy.md).
 
-## 2.11 Under the Hood
+## 2.13 Under the Hood
 
 > **Reading time**: 5 minutes
 > **Goal**: Understand the core architecture that powers Claude Code
@@ -7522,6 +7848,7 @@ allowed-tools: Read Grep Bash
 | `effort` | **CC only** (v2.1.80+) | `low\|medium\|high` — overrides the session effort level when this skill is invoked. Set `low` for mechanical tasks (commit, format, scaffold), `high` for analysis or architectural reasoning. |
 | `argument-hint` | **CC only** | Placeholder shown in the slash command menu when the skill accepts `$ARGUMENTS`. Format: `"[--flag] [positional_arg]"`. Example: `"[--verbose] [--max N] <branch>"`. |
 | `disable-model-invocation` | **CC only** | `true` to make skill manual-only (workflow with side effects) |
+| `context` | **CC only** | `fork` runs the skill in an isolated subagent. The subagent receives only the inputs passed to it; only its final response returns to the main conversation. File reads, tool calls, and intermediate reasoning inside the forked context do not appear in the parent context window. **Known limitation**: `context: fork` is ignored when the skill is invoked via the `Skill` tool in agent code. Fork behavior only activates when the skill is called as a slash command (e.g., `/my-skill`). |
 
 **`effort` per skill** (v2.1.80+) — override the session effort level for a specific skill invocation. Independent of `effortLevel` in settings.json: the skill's value takes precedence only while that skill runs, then reverts.
 
@@ -16200,7 +16527,7 @@ Local DB             →    Docker DB       →    Production DB
 **Reading time**: 5 minutes
 **Skill level**: Week 1+
 
-Batch operations improve efficiency and reduce context usage when making similar changes across files.
+Batch operations improve efficiency and reduce context usage when making similar changes across files. For cost-optimized bulk processing at scale via the API, the Anthropic Message Batches API (`client.messages.batches`) processes up to 100 requests asynchronously at 50% of the synchronous cost (see the [API Patterns section](#anthropic-api-patterns) for full usage).
 
 ### When to Batch
 

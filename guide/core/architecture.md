@@ -228,6 +228,29 @@ The `tool_use` block inside `response.content` has three fields you act on: `id`
 
 **`fork_session`** is a higher-level concept built on this loop: it creates an independent branch of the current conversation, sharing the same message history up to the fork point. Both branches can explore different approaches or configurations simultaneously, like `git branch` but for agent sessions. Each fork runs its own agentic loop independently — useful for comparing responses under different tool configurations or prompt variants without re-running the full conversation from scratch.
 
+#### Controlling loop depth with max_turns
+
+`max_turns` caps the number of assistant/tool iterations before the orchestrator exits. Without an explicit limit, a runaway loop can exhaust budget or context window in ways that are hard to diagnose after the fact.
+
+Practical ranges by task type:
+
+| Task type | Recommended `max_turns` |
+|---|---|
+| Simple retrieval (single lookup) | 5 |
+| Research or multi-step coding | 20-30 |
+| Extended autonomous workflows | 50 |
+
+When `max_turns` is reached, the loop exits with whatever state was last written. The task may be incomplete. Always check the final `stop_reason` and implement a fallback path:
+
+```python
+result = agent.run(task, max_turns=20)
+if result.stop_reason == "max_turns":
+    # escalate or summarize partial progress
+    handle_incomplete(result)
+```
+
+Setting `max_turns` per task type rather than globally prevents a single slow task from starving others in a multi-agent pipeline. A nightly batch job that legitimately needs 50 turns should not inherit the same cap as a quick lookup that should resolve in 5.
+
 ### Native Capabilities Audit
 
 Use this checklist to verify you understand Claude Code's full surface area. Each capability is documented in detail elsewhere in this guide.
@@ -1623,3 +1646,242 @@ Found an error? Have verified new information? Contributions welcome:
 **Last updated**: February 2026
 **Claude Code version**: v2.1.34
 **Document version**: 1.1.0
+
+---
+
+## Anthropic API Patterns for Architects
+
+Three API-level features that architects must understand for production systems: the Message Batches API for cost-optimized bulk processing, `tool_choice` for guaranteed structured output, and strict-mode JSON schema enforcement.
+
+---
+
+### Message Batches API
+
+The Batches API submits up to 100 messages in a single HTTP request and processes them asynchronously within a 24-hour window. The cost is 50% of the synchronous rate — same quality, half the price, at the cost of latency.
+
+**When to use it:**
+
+| Use case | Sync API | Streaming | Batch API |
+|---|---|---|---|
+| Interactive chat | yes | yes | no |
+| Real-time analysis | yes | yes | no |
+| Bulk document processing | no | no | yes (50% cheaper) |
+| Multi-turn tool loops | yes | yes | no (not supported) |
+| Nightly classification pipeline | no | no | yes |
+| Large-scale data extraction | no | no | yes |
+
+The Batches API does not support multi-turn conversations or `tool_use` continuation across turns. Each request in a batch is a single stateless call.
+
+**Submit, poll, retrieve:**
+
+```python
+import anthropic
+import time
+
+client = anthropic.Anthropic()
+
+batch = client.messages.batches.create(
+    requests=[
+        {
+            "custom_id": f"doc-{i}",
+            "params": {
+                "model": "claude-opus-4-5",
+                "max_tokens": 1024,
+                "messages": [
+                    {"role": "user", "content": f"Classify this document: {doc}"}
+                ]
+            }
+        }
+        for i, doc in enumerate(documents)
+    ]
+)
+
+# Poll until done (processing_status: "in_progress" | "ended")
+while batch.processing_status == "in_progress":
+    time.sleep(60)
+    batch = client.messages.batches.retrieve(batch.id)
+
+# Stream results — each entry has a custom_id and a result
+for result in client.messages.batches.results(batch.id):
+    match result.type:
+        case "succeeded":
+            output = result.message.content[0].text
+            process(result.custom_id, output)
+        case "errored":
+            log_error(result.custom_id, result.error.error.message)
+        case "expired":
+            requeue(result.custom_id)
+```
+
+Results stay available for 29 days after the batch ends, then are deleted automatically.
+
+**Error handling at scale:**
+
+Per-request errors do not fail the entire batch. A batch with 100 requests where 3 fail still returns 97 successful results. The pattern for resilient pipelines:
+
+1. Process all `succeeded` results immediately.
+2. Collect `errored` custom_ids for retry with exponential backoff.
+3. Treat `expired` as a soft failure — the request never ran, so requeue it.
+
+**Retry economics:**
+
+Retrying individual failed items synchronously costs 2x the batch rate. If your error rate is below 5%, retrying synchronously is still net-cheaper than splitting batches further. Above 10% error rate, investigate the prompt before retrying at all.
+
+---
+
+### tool_choice: Controlling When Tools Fire
+
+`tool_choice` governs whether and which tools the model can call. Four modes:
+
+| Value | Behavior |
+|---|---|
+| `{"type": "auto"}` | Model decides; may or may not call tools (default) |
+| `{"type": "any"}` | Model must call at least one tool from the provided list |
+| `{"type": "tool", "name": "X"}` | Model must call tool `X` specifically |
+| `{"type": "none"}` | No tool calls allowed; model responds in prose |
+
+The `any` and specific-tool modes change `stop_reason` from `"end_turn"` to `"tool_use"`. This is reliable enough to use as a guard: if `stop_reason != "tool_use"`, the model disobeyed the constraint and you can retry.
+
+**Forced structured output via tool:**
+
+Define the output schema as a tool's `input_schema`, then force its use. The model cannot respond with prose — it must populate your schema.
+
+```python
+response = client.messages.create(
+    model="claude-opus-4-5",
+    max_tokens=1024,
+    tools=[{
+        "name": "extract_invoice",
+        "description": "Extract structured fields from an invoice document",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "vendor_name": {"type": ["string", "null"]},
+                "invoice_date": {
+                    "type": ["string", "null"],
+                    "description": "ISO 8601 date"
+                },
+                "total_amount": {"type": ["number", "null"]},
+                "line_items": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "description": {"type": "string"},
+                            "amount": {"type": "number"}
+                        },
+                        "required": ["description", "amount"]
+                    }
+                }
+            },
+            "required": ["vendor_name", "invoice_date", "total_amount", "line_items"]
+        }
+    }],
+    tool_choice={"type": "tool", "name": "extract_invoice"},
+    messages=[{"role": "user", "content": f"Extract fields from:\n\n{invoice_text}"}]
+)
+
+# result is always tool_use, never prose
+fields = response.content[0].input
+```
+
+This pattern works for any extraction, classification, or analysis task where you need machine-readable output. It does not require the beta header.
+
+---
+
+### Structured Outputs: strict Mode
+
+The `output-schema-2025-02-19` beta enables constrained decoding. The model generates tokens that, by construction, cannot violate the JSON schema. It never produces invalid JSON, never omits required fields, never uses the wrong type.
+
+**Activating strict mode:**
+
+```python
+client = anthropic.Anthropic()
+
+response = client.beta.messages.create(
+    model="claude-opus-4-5",
+    max_tokens=1024,
+    betas=["output-schema-2025-02-19"],
+    tools=[{
+        "name": "classify_document",
+        "description": "Classify a document into a category",
+        "input_schema": {
+            "type": "object",
+            "strict": True,
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "enum": ["invoice", "contract", "report", "memo", "other"]
+                },
+                "category_detail": {
+                    "type": ["string", "null"],
+                    "description": "Free-text clarification required when category is 'other'"
+                },
+                "confidence": {"type": "number"},
+                "summary": {"type": "string"}
+            },
+            "required": ["category", "category_detail", "confidence", "summary"]
+        }
+    }],
+    tool_choice={"type": "tool", "name": "classify_document"},
+    messages=[{"role": "user", "content": doc_text}]
+)
+```
+
+**What `strict: true` guarantees:**
+- Syntactically valid JSON
+- All `required` fields are present
+- Field types exactly match the schema
+- No additional properties beyond those declared
+
+**What `strict: true` does not guarantee:**
+- Semantic accuracy (the `confidence` field may be 0.99 for a wrong classification)
+- Truthful values (a `vendor_name` field will be populated, but may be wrong if the document is ambiguous)
+
+For semantic accuracy, pair strict mode with a validation retry loop.
+
+**Nullable fields prevent hallucination of defaults:**
+
+Without nullable, the model must fill every required field and will invent a value rather than leave it empty. Nullable fields give the model an explicit out:
+
+```json
+"vendor_name": {"type": ["string", "null"]}
+```
+
+The model returns `null` when the field cannot be found, rather than guessing.
+
+**Extensible enums with companion fields:**
+
+Closed enums break when inputs don't fit any category. The solution: add `"other"` as the last enum value and a companion detail field:
+
+```json
+{
+    "document_type": {
+        "type": "string",
+        "enum": ["invoice", "purchase_order", "receipt", "credit_note", "other"]
+    },
+    "document_type_detail": {
+        "type": ["string", "null"],
+        "description": "Populate when document_type is 'other'; describe the actual document type"
+    }
+}
+```
+
+This preserves the type-safety of the enum for the 95% case while capturing the 5% gracefully.
+
+**`detected_pattern` for false-positive analysis:**
+
+In classification pipelines, a `detected_pattern` field surfaces the evidence the model used. This turns opaque classifications into debuggable decisions:
+
+```json
+{
+    "is_complaint": {"type": "boolean"},
+    "detected_pattern": {
+        "type": ["string", "null"],
+        "description": "Quote the specific phrase or pattern that triggered the classification"
+    },
+    "confidence": {"type": "number"}
+}
+```
+
+When `is_complaint: true` with `detected_pattern: "your service is terrible"`, a human reviewer can validate the classification in seconds. When `detected_pattern: null` and `confidence: 0.6`, that is a signal to escalate for manual review rather than auto-process.

@@ -29,7 +29,8 @@ This guide covers everything from the token math behind context budgets to build
 9. [Maturity Assessment](#9-maturity-assessment)
 10. [Token Audit Workflow](#10-token-audit-workflow)
 11. [Research Patterns](#11-research-patterns-what-the-literature-shows)
-12. [Token Compression Tools](#12-token-compression-tools)
+12. [Attention Mechanics & Reliability](#17-attention-mechanics--reliability)
+13. [Token Compression Tools](#18-token-compression-tools)
 
 ---
 
@@ -2144,7 +2145,244 @@ The difference between claim-source mapping as a QA mechanism vs as a compliance
 
 ---
 
-## 17. Token Compression Tools
+## 17. Attention Mechanics & Reliability
+
+Claude's attention is not uniform across the context window. Position within the prompt measurably affects whether information is used. This section covers the mechanics, the evidence behind them, and the patterns that compensate.
+
+---
+
+### The Lost-in-the-Middle Problem
+
+Research by Liu et al. (2023, arXiv:2307.03172) examined how large language models use information at different positions within long contexts. The finding: retrieval accuracy follows a U-shaped curve. Information placed at the start or end of a long context is recalled significantly more accurately than information placed in the middle.
+
+For Claude specifically, NIAH (Needle-in-a-Haystack) benchmarks on the 100K context window showed that passage retrieval accuracy dropped from 98% for documents placed at the start or end to 27% for documents placed in the middle, a 71-point gap. Subsequent model releases improved middle-context recall, but the U-shaped bias persists at scale.
+
+**Practical consequence:** Any information the model needs to use reliably should not be buried in the middle of a long context.
+
+---
+
+### Primacy and Recency Placement
+
+The two high-attention zones are the beginning (primacy) and the end (recency) of the context window. The sandwich pattern exploits both:
+
+```
+[System prompt — persistent constraints, persona, critical rules]
+[User's long document or retrieved context — middle zone]
+[End of user message — restate the task + any constraints that must hold]
+```
+
+For documents long enough that the middle-zone penalty matters (roughly above 20,000 tokens), place the most critical information at both ends:
+
+```python
+def build_analysis_prompt(document: str, critical_facts: list[str]) -> str:
+    facts_block = "\n".join(f"- {f}" for f in critical_facts)
+    
+    return f"""CRITICAL FACTS (reference throughout your analysis):
+{facts_block}
+
+DOCUMENT TO ANALYZE:
+{document}
+
+REMINDER — apply these critical facts in your analysis:
+{facts_block}
+
+Now produce the analysis."""
+```
+
+Repeating critical facts at the end is not redundant. It compensates for the middle-zone attention drop on the primary document.
+
+**Per-section passes for very long documents:**
+
+For documents above 50,000 tokens, a single-pass analysis risks missing content in the middle sections. The per-section + integration pattern:
+
+```python
+def analyze_long_document(client, document: str, section_size: int = 8000) -> str:
+    sections = split_into_sections(document, max_tokens=section_size)
+    section_analyses = []
+    
+    for i, section in enumerate(sections):
+        response = client.messages.create(
+            model="claude-opus-4-5",
+            max_tokens=1024,
+            messages=[{
+                "role": "user",
+                "content": (
+                    f"Analyze section {i+1} of {len(sections)}:\n\n{section}\n\n"
+                    f"Focus on key facts, risks, and obligations. "
+                    f"Note: this is one section of a longer document."
+                )
+            }]
+        )
+        section_analyses.append(response.content[0].text)
+    
+    # Integration pass with all section summaries in scope
+    integration_prompt = "\n\n".join([
+        f"SECTION {i+1} ANALYSIS:\n{analysis}"
+        for i, analysis in enumerate(section_analyses)
+    ])
+    
+    final_response = client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=2048,
+        messages=[{
+            "role": "user",
+            "content": (
+                f"You have {len(sections)} section analyses from a single document. "
+                f"Synthesize them into a complete analysis:\n\n{integration_prompt}"
+            )
+        }]
+    )
+    
+    return final_response.content[0].text
+```
+
+Each section analysis is short and keeps the relevant content in the primacy position. The integration pass works on summaries rather than the full document, keeping everything within high-attention range.
+
+---
+
+### Context Window Size vs Attention Quality
+
+Larger context windows do not mean better comprehension of large inputs. Attention quality degrades before the context window fills. In practice:
+
+- Claude 3.5 Sonnet: noticeable quality degradation begins around 50,000-70,000 tokens of effective content
+- Claude 3 Opus: similar degradation threshold, with a stronger middle-zone penalty
+- Models with 1M-token windows: the window size enables more data to be present, not necessarily better use of that data
+
+The misconception is treating context window size as a quality guarantee. A 200K-token input does not get the same per-token attention quality as a 10K-token input. For tasks requiring precise use of scattered facts, a well-structured 30K prompt often outperforms a raw-dump 200K prompt.
+
+**Design rule:** fit the context to the task, not the task to the context.
+
+---
+
+### Persistent Facts Block
+
+The persistent facts block is a structured section, placed at the start of the system prompt, containing facts the model must reference throughout the conversation. Unlike retrieval, it is verbatim inclusion: the facts are always in the primacy position, always in scope, and compatible with prompt caching.
+
+```python
+PERSISTENT_FACTS = """
+## Reference: Company Context
+
+Entity: Acme Corp (Delaware C-Corp, EIN: 12-3456789)
+Fiscal year end: December 31
+Applicable law: Delaware corporate law, US federal regulations
+Jurisdiction for disputes: Court of Chancery, Delaware
+Authorized shares: 10,000,000 common @ $0.001 par
+"""
+
+system_prompt = f"""{PERSISTENT_FACTS}
+
+You are a contract analysis assistant. Use the company context above for all entity references.
+[rest of system prompt]
+"""
+```
+
+Persistent facts blocks are prompt-cache friendly: because they appear at a fixed position with static content, Anthropic's prompt caching will cache them after the first call, reducing cost and latency on subsequent turns.
+
+Keep the persistent facts block under 500 tokens. Beyond that, retrieval with re-ranking is more effective because the block itself starts falling into the middle zone.
+
+---
+
+### Scratchpad Pattern
+
+The scratchpad pattern gives the model persistent working memory across turns without relying on context accumulation. A synthetic assistant message at the start of the conversation holds structured state; the orchestrator updates it programmatically after each turn.
+
+```python
+def initialize_scratchpad(task_spec: dict) -> str:
+    return f"""<scratchpad>
+<task>{task_spec['description']}</task>
+<status>in_progress</status>
+<completed_steps>[]</completed_steps>
+<pending_steps>{json.dumps(task_spec['steps'])}</pending_steps>
+<working_notes></working_notes>
+</scratchpad>"""
+
+def update_scratchpad(scratchpad: str, updates: dict) -> str:
+    for key, value in updates.items():
+        scratchpad = re.sub(
+            f"<{key}>.*?</{key}>",
+            f"<{key}>{value}</{key}>",
+            scratchpad,
+            flags=re.DOTALL
+        )
+    return scratchpad
+
+# Conversation structure:
+messages = [
+    {"role": "assistant", "content": initialize_scratchpad(task)},
+    {"role": "user", "content": "Continue the task from your scratchpad."}
+]
+
+# After each turn, update the scratchpad with new state
+new_scratchpad = update_scratchpad(
+    messages[0]["content"],
+    {
+        "completed_steps": json.dumps(completed),
+        "pending_steps": json.dumps(remaining),
+        "working_notes": latest_notes
+    }
+)
+messages[0]["content"] = new_scratchpad
+```
+
+The scratchpad stays in the primacy position (it is the first message) across all turns. Working notes accumulate there rather than growing the conversation history.
+
+**Scratchpad vs rolling summary:** Use a scratchpad when you need structured state with programmatic update. Use rolling summaries when the accumulated context is unstructured conversation and you need to compress it.
+
+---
+
+### Rolling Context Summaries
+
+As conversation history grows, older turns lose relevance but consume tokens. Rolling context summaries compress completed phases into a compact record before they drift into the middle zone.
+
+```python
+SUMMARY_TRIGGER_RATIO = 0.65  # summarize when context reaches 65% capacity
+
+def maybe_summarize_history(
+    client,
+    messages: list[dict],
+    context_limit: int,
+    current_tokens: int
+) -> list[dict]:
+    if current_tokens / context_limit < SUMMARY_TRIGGER_RATIO:
+        return messages
+    
+    # Separate messages to summarize from recent messages to keep verbatim
+    keep_recent = 4  # keep last 4 turns verbatim
+    to_summarize = messages[:-keep_recent]
+    to_keep = messages[-keep_recent:]
+    
+    # Extract key facts before summarizing
+    facts_response = client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=512,
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    f"Extract key facts, decisions, and open items from this conversation "
+                    f"history as a compact list:\n\n"
+                    + "\n".join(f"{m['role']}: {m['content']}" for m in to_summarize)
+                )
+            }
+        ]
+    )
+    key_facts = facts_response.content[0].text
+    
+    summary_message = {
+        "role": "assistant",
+        "content": f"<conversation_summary>\n{key_facts}\n</conversation_summary>"
+    }
+    
+    return [summary_message] + to_keep
+```
+
+Extract key facts before summarizing, not from the summary. Summaries lose edge cases and boundary conditions that often matter. A facts extraction pass with a smaller model (Haiku) is cheap and preserves more signal.
+
+Trigger at 65% of the context limit rather than waiting for the 80% auto-compact threshold. Proactive compression keeps you in control of what is preserved.
+
+---
+
+## 18. Token Compression Tools
 
 The previous sections focus on what to put in context. This section covers tooling that compresses what enters context at the pipeline level — reducing token volume before Claude ever processes it. These tools complement CLAUDE.md authorship: good context engineering reduces noise at design time, compression tools reduce volume at runtime.
 
