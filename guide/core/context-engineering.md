@@ -1864,7 +1864,34 @@ For a team of 5 or more developers, run the reconciliation check monthly. For te
 
 ## 15. Token Audit Workflow
 
-Context engineering theory only converts to real gains once you measure your actual overhead. Most developers discover they are loading 40-60K tokens of fixed context before any user task begins — configuration files, rules, hooks output, memory files, and the Claude Code system prompt all compound. This section provides a reproducible audit workflow that takes under five minutes and produces an actionable plan.
+Context engineering theory only converts to real gains once you measure your actual overhead. Most developers discover they are loading 40-60K tokens of fixed context before any user task begins: configuration files, rules, hooks output, memory files, and the Claude Code system prompt all compound. This section provides a reproducible audit workflow that takes under five minutes and produces an actionable plan.
+
+### Real-World Session Benchmarks
+
+Before auditing your overhead, calibrate against what practitioners observe on real codebases. The figures below come from heavy users on Max 200 plans running Opus 4.7 at high effort. Treat them as upper-range references: the same tasks at Sonnet-level effort run 30-50% lower.
+
+**Per-turn (input + output combined)**
+
+| Task type | Typical range |
+|-----------|---------------|
+| Simple question, 1-2 tool calls | 10-30K tokens |
+| Targeted edit with file reads | 30-80K tokens |
+| Feature implementation with exploration | 100-300K tokens |
+| Heavy investigation (MCP, multi-agent, Datadog) | 300K-1M+ tokens |
+
+**Per-session (full conversation)**
+
+| Session type | Typical range |
+|--------------|---------------|
+| Quick fix | 100-300K tokens |
+| Complete PR with tests | 500K-2M tokens |
+| Long session with compaction | 5M-20M+ tokens |
+
+The dominant cost driver is input tokens, not output. A 1,000-line file re-read five times in the same session adds roughly 50K input tokens on its own. MCP tools that return verbose JSON (Notion, Datadog, GitHub API responses) compound this quickly: a single Datadog query can push 20-50K tokens into context before the model even processes the data.
+
+Team-level perspective: in a Slack community survey of Claude Code power users (May 2026), individual heavy users reported 300-430M tokens per day on complex agentic workflows; median team usage ran closer to 40K tokens per request across a mixed team (simple and complex tasks combined), with heavy users reaching 85K+.
+
+Sub-agents shift the math. Each sub-agent operates in a shorter, focused context window, so per-agent token cost is lower. Total cost across all agents in a complex workflow is typically higher than a single long session because you are spawning many agents. What improves is quality and parallelism, not raw token efficiency.
 
 ### What Counts as Fixed Context
 

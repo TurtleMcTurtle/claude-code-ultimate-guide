@@ -575,6 +575,7 @@ Beyond the hook-based approach above, the community has built purpose-specific t
 | **Akto** | SaaS / self-hosted | API security guardrails + audit trail. Intercepts at the API level, flags policy violations. | [akto.io](https://akto.io) |
 | **MLflow Tracing** | CLI + SDK | Exact token counts, tool spans, LLM-as-judge evaluation. CLI mode: zero Python required. Best for ML/MLOps teams. | `pip install mlflow` → [see section below](#mlflow-tracing) |
 | **ccboard** | TUI + Web | Unified dashboard for sessions, costs, stats. Activity/audit tab in development. | `cargo install ccboard` |
+| **claude-crusts** | CLI | One-command context pollution scanner: flags stale files, oversized memories, and redundant rule loading. Spot what's inflating your context before running sessions. | [github.com/Abinesh-L/claude-crusts](https://github.com/Abinesh-L/claude-crusts) |
 
 ### Decision Guide
 
@@ -584,6 +585,7 @@ Need enterprise audit trail?     → claude-code-otel + Grafana or Akto
 Already using MLflow for ML?     → MLflow tracing integration (see below)
 Need agent regression detection? → MLflow tracing + LLM-as-judge
 Want a persistent TUI/Web UI?    → ccboard
+Context pollution audit?         → claude-crusts (1-command scan)
 ```
 
 ### ccusage
