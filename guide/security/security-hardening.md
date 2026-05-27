@@ -330,6 +330,112 @@ grep -r "permissions.allow" .claude/ 2>/dev/null
 
 **Rule of thumb**: Review `.claude/` in an unknown repo with the same scrutiny you'd apply to `package.json` scripts or `.github/workflows/`.
 
+### 1.6 Third-Party Command Wrappers & Shell Interceptors
+
+Any binary or function that sits between Claude Code and the actual CLI tool can read all command arguments and outputs — diffs, credentials printed by `gh auth status`, env vars echoed during builds, database URLs in psql connection strings. This includes token-saving wrappers like RTK, but also shell plugins and completion frameworks that are often installed and forgotten.
+
+#### What Can Intercept Commands in an Agent Session
+
+| Interceptor Type | Examples | Access Level |
+|-----------------|----------|-------------|
+| **Token-saving wrappers** | RTK, similar proxies | All args + full output of every intercepted command |
+| **Shell function overrides** | oh-my-zsh plugins, custom `.zshrc` aliases | Args before the real binary sees them |
+| **Completion frameworks** | Fig, Warp AI, Zsh completions with side effects | Keystrokes + partial commands |
+| **Claude Code hooks** | PreToolUse/PostToolUse in `.claude/settings.json` | Full tool input + output (see [Section 1.5](#15-malicious-extensions-claude-attack-surface)) |
+| **MCP servers** | Any installed MCP with access to Bash/Read tools | All tool results in real time (see [Section 1.1](#11-mcp-vetting-workflow)) |
+
+#### Checking What's Active
+
+Before starting a sensitive session, verify whether commands are intercepted:
+
+```bash
+# Check if a command is a shell function (intercepted)
+type git
+type gh
+# Output "git is a function" = intercepted; "git is /usr/bin/git" = clean
+
+# Show the interceptor code
+declare -f git
+
+# List all shell functions that shadow known binaries
+for cmd in git gh aws psql stripe curl; do
+  type $cmd 2>/dev/null | grep -v "is /usr" && echo "  ^ $cmd is intercepted"
+done
+```
+
+#### Auditing a Specific Wrapper (RTK Example)
+
+RTK is open-source and its attack surface is well-contained, but the same audit process applies to any similar tool:
+
+```bash
+# 1. Verify hook integrity (covers the bash hook, not the binary itself)
+rtk verify
+
+# 2. Check what the binary actually stores
+sqlite3 ~/.local/share/rtk/rtk.db \
+  "SELECT command, input_tokens, output_tokens FROM commands LIMIT 20;"
+# Should contain only command names and token counts, never content
+
+# 3. Monitor for unexpected network activity during a session
+lsof -c rtk -i        # macOS
+# or on Linux:
+strace -e trace=network rtk git status 2>&1 | grep connect
+
+# 4. Verify binary checksum against GitHub Releases before upgrading
+sha256sum $(which rtk)
+```
+
+**Important distinction**: `rtk verify` confirms the hook bash script hasn't been tampered with, but the binary itself has no cryptographic attestation. A compromised binary with an intact hook would pass verification. This is why supply chain hygiene (checksum + pinned version) matters for the binary, not just the hook.
+
+#### Supply Chain Hygiene for CLI Tools
+
+```bash
+# Homebrew: pin to current version, review diff before upgrading
+brew pin rtk
+brew pin gh
+
+# Cargo: lock the full dependency tree
+cargo install rtk@0.42.0 --locked
+
+# Before any upgrade: diff sensitive modules
+git -C $(brew --repository homebrew/core) log --oneline Formula/rtk.rb
+# or for Cargo crates:
+cargo diff rtk 0.42.0 0.43.0  # requires cargo-diff
+```
+
+#### Minimal Shell for Sensitive Sessions
+
+For sessions involving production credentials or destructive operations, strip all plugins before launching:
+
+```bash
+# Clean shell: no plugins, no completions, no aliases
+env -i HOME="$HOME" PATH="/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin" \
+  USER="$USER" TERM="$TERM" \
+  zsh --no-rcs --no-globalrcs
+
+# Or launch Claude Code directly from a minimal environment
+env -i HOME="$HOME" PATH="$PATH" USER="$USER" claude
+```
+
+#### Context Separation: No Production Credentials in Agent Sessions
+
+The principle behind every mitigation above: a compromised interceptor can only exfiltrate what passes through it. Keeping production credentials out of agent sessions eliminates the highest-value targets.
+
+```bash
+# Wrong: production credentials available in the default shell
+export AWS_PROFILE=production
+claude  # agent now has access to prod AWS
+
+# Right: agent session uses a restricted profile
+AWS_PROFILE=dev-readonly claude
+
+# Best: inject secrets at execution time, never in the environment
+op run --env-file=.env.prod -- ./scripts/deploy.sh  # 1Password
+aws-vault exec staging -- terraform plan            # aws-vault (temp credentials, 1h TTL)
+```
+
+After any agent session that involved credentials (even temporary ones), rotate tokens as a precaution. If a wrapper, hook, or MCP was compromised silently, the rotation limits the blast radius to the session window.
+
 ---
 
 ## Part 2: Detection (While You Work)

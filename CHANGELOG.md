@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Security
+
+- **New section 1.6 in security-hardening.md**: Third-Party Command Wrappers & Shell Interceptors. Covers the attack surface of token-saving wrappers (RTK and similar), shell function overrides (oh-my-zsh plugins), completion frameworks (Fig, Warp), and how to audit each. Includes supply chain hygiene for CLI tools (`brew pin`, `cargo --locked`, checksum verification), minimal shell setup for sensitive sessions, and context separation (no production credentials in agent sessions).
+
 ---
 
 ## [3.41.0] - 2026-05-27
