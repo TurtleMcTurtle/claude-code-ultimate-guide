@@ -218,7 +218,7 @@ deep_dive:
   remarkable_getting_started: "guide/ecosystem/remarkable-ai.md#15-par-où-commencer"
   remarkable_community: "https://github.com/reHackable/awesome-reMarkable"
   # Whitepapers (FR + EN) — 9 focused whitepapers on Claude Code
-  whitepapers_url: "https://www.florian.bruniaux.com/guides"
+  whitepapers_url: "https://cc.bruniaux.com/whitepapers/"
   whitepapers_fr: "whitepapers/fr/"  # FR sources (Quarto .qmd)
   whitepapers_en: "whitepapers/en/"  # EN sources (Quarto .qmd)
   whitepapers_topics: "foundations, prompting, customization, security, architecture, team, privacy, reference, agent-teams"

@@ -25,7 +25,7 @@ Claude Code runs locally. It does **not** send your codebase to Anthropic — on
 - Access control: granular permissions per project, per user, per tool
 - Audit trail: every action logged via hooks
 
-Full breakdown: WP06 — Privacy & GDPR Compliance (20 min) — [florian.bruniaux.com/guides](https://www.florian.bruniaux.com/guides)
+Full breakdown: WP06 (Privacy & GDPR Compliance, 20 min): [cc.bruniaux.com/whitepapers](https://cc.bruniaux.com/whitepapers/)
 
 ### Threat landscape
 
@@ -35,7 +35,7 @@ This is the only public resource tracking AI coding tool vulnerabilities: **15 v
 - Supply chain attacks via MCP servers (treat like npm packages)
 - Overpermissive configs in CI/CD pipelines
 
-Mitigation framework: WP03 — Security in Production (25 min) — [florian.bruniaux.com/guides](https://www.florian.bruniaux.com/guides)
+Mitigation framework: WP03 (Security in Production, 25 min): [cc.bruniaux.com/whitepapers](https://cc.bruniaux.com/whitepapers/)
 
 ### Team adoption
 
@@ -43,13 +43,13 @@ The ROI scales with structure. An individual developer gets 2-3× productivity o
 
 Realistic adoption timeline: 4-6 weeks to full team competency with structured onboarding.
 
-WP05 — Deploying with a Team (25 min) — [florian.bruniaux.com/guides](https://www.florian.bruniaux.com/guides)
+WP05 (Deploying with a Team, 25 min): [cc.bruniaux.com/whitepapers](https://cc.bruniaux.com/whitepapers/)
 
 ---
 
 ## Recommended reading path (60 min total)
 
-> Whitepapers are available at [florian.bruniaux.com/guides](https://www.florian.bruniaux.com/guides)
+> Whitepapers are available at [cc.bruniaux.com/whitepapers](https://cc.bruniaux.com/whitepapers/)
 
 | Document | Time | What you'll get |
 |----------|------|----------------|
@@ -102,7 +102,7 @@ If you want to accelerate adoption or get an independent assessment of your curr
 
 ## Quick links
 
-- Whitepapers — 10 focused deep-dives: [florian.bruniaux.com/guides](https://www.florian.bruniaux.com/guides)
+- Whitepapers (10 focused deep-dives): [cc.bruniaux.com/whitepapers](https://cc.bruniaux.com/whitepapers/)
 - [Security Hardening Guide](../guide/security/security-hardening.md)
 
 ← [Back to main README](../README.md)
