@@ -94,7 +94,7 @@ For `PreToolUse`, `PostToolUse`, and related tool events, the matcher filters on
 - Contains any other character: treated as JavaScript regex (`mcp__memory__.*`)
 - `"*"`, `""`, or absent: matches all tool calls
 
-Other events match different fields (e.g. `SessionStart` matches on `source: startup|resume|clear|compact`).
+Other events match different fields (e.g. `SessionStart` matches on `source: startup|resume|clear|compact`). For the complete per-event matcher field reference, see `guide/core/hooks-events-reference.md`.
 
 ### The `if` field (v2.1.85+)
 
@@ -132,7 +132,7 @@ If an argument is provided (e.g. `/eval-hooks .claude/settings.local.json`), aud
 
 | # | Criterion | Max | What is checked |
 |---|-----------|-----|-----------------|
-| 1 | **valid event type** | 1 | Type is one of the 26 known event types listed above |
+| 1 | **valid event type** | 1 | Type is one of the 30 known event types listed above |
 | 2 | **matcher** | 2 | Absent for events that don't support matchers (1pt); not an overly broad pattern with a heavy command (1pt) |
 | 3 | **command** | 3 | Non-empty (1pt); referenced script or binary resolves on disk (1pt); script is executable (chmod +x) (1pt) |
 | 4 | **timeout** | 2 | Blocking hooks (PreToolUse, UserPromptSubmit) have explicit `timeout` field (1pt); value is ≤ 30s for interactive hooks (1pt) |
@@ -341,6 +341,7 @@ For any hook the user marked as stale: ask for explicit confirmation before remo
 - **Script not executable**: hook fails silently on most systems, suggest `chmod +x` immediately
 - **Matcher on non-matcher event** (e.g. `UserPromptSubmit` with a matcher): flag as silently ignored, suggest removing it
 - **`async: true` hook returning `decision: "block"`**: flag as ⚠️ (async hooks cannot block, decision fields have no effect)
+- **`asyncRewake: true` hook**: implies `async: true` but additionally wakes Claude when the background process exits with code 2. The hook's stderr (or stdout if stderr is empty) is shown to Claude as a system reminder. Flag hooks that need to signal background failures back to Claude but use `async` instead of `asyncRewake`
 - **`prompt` or `agent` type hook**: these don't have a command to resolve; check that the `prompt` field is present and non-empty
 - **SessionEnd hooks**: the default timeout budget is 1.5s. Even if a hook declares `timeout: 30`, it may be cut off. Flag any SessionEnd hook without an explicit timeout, and warn that heavy work here risks being killed
 - **Hooks not firing as expected**: advise using `/hooks` menu in Claude Code to verify configuration, and checking `~/.claude/logs/` or running with `--debug`

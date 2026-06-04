@@ -232,7 +232,7 @@ Model: Sonnet | Ctx: 89.5k | Cost: $2.11 | Ctx(u): 56.0%
 | Concept | Key Point |
 |---------|-----------|
 | **Master Loop** | Simple `while(tool_call)` — no DAGs, no classifiers |
-| **Tools** | 8 core: Bash, Read, Edit, Write, Grep, Glob, Task, TodoWrite |
+| **Tools** | 8 core: Bash, Read, Edit, Write, Grep, Glob, Agent, TodoWrite ([full 40-tool reference](./core/tools-reference.md)) |
 | **Context** | ~200K tokens, auto-compacts at 75-92% |
 | **Sub-agents** | Isolated context, max depth=1 |
 | **Philosophy** | "Less scaffolding, more model" — trust Claude's reasoning |

@@ -312,7 +312,7 @@ Use this checklist to verify you understand Claude Code's full surface area. Eac
 **Confidence**: 100% (Tier 1 - Official)
 **Source**: [code.claude.com/docs](https://code.claude.com/docs/en/setup)
 
-Claude Code has exactly 8 core tools:
+These 8 tools cover 90% of day-to-day use, out of roughly 40 built-in tools total. See the [complete Tools Reference](./tools-reference.md) for every tool including Monitor, LSP, Workflow, Cron*, Task API, agent teams, and more.
 
 | Tool | Purpose | Key Behavior | Token Cost |
 |------|---------|--------------|------------|
@@ -322,8 +322,8 @@ Claude Code has exactly 8 core tools:
 | `Write` | Create/overwrite files | Must read first if file exists | Medium |
 | `Grep` | Search file contents | Ripgrep-based (regex), replaced RAG/embedding approach. For structural code search (AST-based), see ast-grep plugin. Trade-off: Grep (fast, simple) vs ast-grep (precise, setup required) vs Serena MCP (semantic, symbol-aware) | Low |
 | `Glob` | Find files by pattern | Path matching, sorted by mtime | Low |
-| `Task` | Spawn sub-agents | Isolated context, depth=1 limit | High (new context) |
-| `TodoWrite` | Track progress | Structured task management | Low |
+| `Agent` | Spawn sub-agents (formerly `Task`) | Isolated context, depth=1 limit | High (new context) |
+| `TodoWrite` | Track progress (legacy) | Superseded by Tasks API (v2.1.16+); disabled by default since v2.1.142 | Low |
 
 ### The Bash Universal Adapter
 
