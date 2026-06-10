@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Updated
+
+- Promoted Opus 4.8 (`claude-opus-4-8`) to current/recommended/default Opus across guide, whitepapers, recap cards, machine-readable files, and landing data; demoted Opus 4.6 and 4.7 to previous generation.
+- Added Fable 5 (`claude-fable-5`, Mythos-class) to model-lineup and selection tables throughout the guide and whitepapers.
+- Updated fast-mode references from "6x price" to "2x price" (verified for Opus 4.8) and corrected the `/fast` cheatsheet entry.
+- Marked Opus 4.8 standard pricing as "see official docs" (no published rate); kept 4.6/4.7 rows as previous-generation reference.
+- Updated effort API code example (`guide/ultimate-guide.md` §11.1) from `claude-opus-4-7` to `claude-opus-4-8`.
+
 ### Security
 
 - **Threat database v2.21.0** (`examples/commands/resources/threat-db.yaml`): monthly update for June 2026.

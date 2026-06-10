@@ -16,14 +16,14 @@ format:
 
 ## Fast Mode
 
-Fast Mode produit des réponses **2.5x plus rapides** en échange d'un coût 6x supérieur. Le modèle sous-jacent reste Opus 4.6, pas un modèle différent : c'est une allocation de ressources prioritaire, pas une simplification du raisonnement.
+Fast Mode produit des réponses **2.5x plus rapides** en échange d'un coût 2x supérieur (vérifiée pour Opus 4.8). Le modèle sous-jacent est Opus 4.8, pas un modèle différent : c'est une allocation de ressources prioritaire, pas une simplification du raisonnement.
 
 | Paramètre | Standard | Fast Mode |
 |-----------|----------|-----------|
-| Modèle | Opus 4.6 | Opus 4.6 |
+| Modèle | Opus 4.8 | Opus 4.8 |
 | Vitesse | Référence | 2.5x plus rapide |
-| Prix input | $5/MTok | $30/MTok |
-| Prix output | $25/MTok | $150/MTok |
+| Prix input | Voir docs officielles | 2x standard |
+| Prix output | Voir docs officielles | 2x standard |
 
 **En CLI :** `/fast` active le mode pour la session courante.
 
@@ -41,11 +41,11 @@ Fast Mode est rentable quand le temps de réponse a une valeur métier directe :
 - Tâches simples couvrable par Sonnet ou Haiku
 - Budgets API serrés
 
-## Fast Mode via API (Opus 4.6)
+## Fast Mode via API (Opus 4.8)
 
 ```python
 response = client.messages.create(
-    model="claude-opus-4-6",
+    model="claude-opus-4-8",
     speed="fast",
     extra_headers={
         "anthropic-beta": "fast-mode-2026-02-01"

@@ -61,7 +61,7 @@ Condition d'applicabilité : les modules doivent avoir zéro état partagé. Si 
 
 ## Isolation et permissions par agent
 
-Chaque agent dispose de sa propre fenêtre de contexte (1M tokens avec Opus 4.6) et peut recevoir une whitelist d'outils distincte. Limiter un agent aux outils `Read`, `Glob`, `Grep` empêche toute modification accidentelle pendant la phase d'analyse.
+Chaque agent dispose de sa propre fenêtre de contexte (1M tokens avec Opus 4.8) et peut recevoir une whitelist d'outils distincte. Limiter un agent aux outils `Read`, `Glob`, `Grep` empêche toute modification accidentelle pendant la phase d'analyse.
 
 | Agent | Outils autorisés |
 |-------|-----------------|
@@ -85,7 +85,7 @@ claude
 }
 ```
 
-Prérequis : Claude Code v2.1.32+, modèle Opus 4.6 (`/model opus`), dépôt git initialisé. Navigation entre agents via `Shift+Down` en mode in-process.
+Prérequis : Claude Code v2.1.32+, modèle Opus 4.8 recommandé, Opus 4.6+ compatible (`/model opus`), dépôt git initialisé. Navigation entre agents via `Shift+Down` en mode in-process.
 
 ## Guardrails (v3.38.0)
 
@@ -93,7 +93,7 @@ Trois contrôles indispensables pour les équipes autonomes :
 
 **Boucles** — `MAX_ITERATIONS=8` et un prompt de réflexion obligatoire avant chaque cycle. Si l'agent atteint la limite, tuer ou réassigner plutôt que de laisser tourner.
 
-**Reviewer dédié** — 1 agent Opus 4.6 read-only (outils `Read/Grep/Glob`) auto-déclenché sur `TaskCompleted`, pour 4 agents workers. Ratio 1:4. (Crédit : Addy Osmani)
+**Reviewer dédié** : 1 agent Opus 4.8 read-only (outils `Read/Grep/Glob`) auto-déclenché sur `TaskCompleted`, pour 4 agents workers. Ratio 1:4. (Crédit : Addy Osmani)
 
 **Budget tokens par agent** — Fixer une limite stricte de tokens par agent ; pause automatique à 85% pour vérification humaine avant de continuer.
 

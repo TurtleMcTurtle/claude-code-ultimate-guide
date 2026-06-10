@@ -713,7 +713,7 @@ Per-plugin MCP server configurations, keyed by `plugin@marketplace`.
 **Default:** `"medium"`
 **Values:** `"low"` | `"medium"` | `"high"`
 
-Persist the effort level across sessions. Controls reasoning depth. Written automatically when you run `/effort low|medium|high`. Supported on Opus 4.6 and Sonnet 4.6. The `CLAUDE_CODE_EFFORT_LEVEL` env var takes precedence.
+Persist the effort level across sessions. Controls reasoning depth. Written automatically when you run `/effort low|medium|high`. Supported on Opus 4.6+ and Sonnet 4.6. The `CLAUDE_CODE_EFFORT_LEVEL` env var takes precedence.
 
 #### `modelOverrides`
 **Type:** object
@@ -736,7 +736,7 @@ Map Anthropic model IDs to provider-specific model IDs (e.g., Bedrock inference 
 |-------|-------------|
 | `"default"` | Recommended model for your account type |
 | `"sonnet"` | Latest Sonnet (Claude Sonnet 4.6) |
-| `"opus"` | Latest Opus (Claude Opus 4.6) |
+| `"opus"` | Latest Opus (Claude Opus 4.8) |
 | `"haiku"` | Fast Haiku model |
 | `"sonnet[1m]"` | Sonnet with 1M token context |
 | `"opusplan"` | Opus for planning, Sonnet for execution |
@@ -1131,7 +1131,7 @@ Set in your shell before launching `claude`, or configure under the `env` key in
 | `BASH_MAX_TIMEOUT_MS` | Maximum bash command timeout in milliseconds (default: 600000) |
 | `BASH_MAX_OUTPUT_LENGTH` | Maximum characters in bash output before saving to a file and sending the path |
 | `MAX_THINKING_TOKENS` | Extended thinking token budget. Set to `0` to disable. Ignored on models with adaptive reasoning unless `CLAUDE_CODE_DISABLE_ADAPTIVE_THINKING` is set |
-| `CLAUDE_CODE_MAX_OUTPUT_TOKENS` | Max output tokens per response (default: 32,000; up to 128,000 on Opus 4.6 and Sonnet 4.6) |
+| `CLAUDE_CODE_MAX_OUTPUT_TOKENS` | Max output tokens per response (default: 32,000; up to 128,000 on Opus 4.8 and Sonnet 4.6) |
 | `CLAUDE_CODE_FILE_READ_MAX_OUTPUT_TOKENS` | Override default file read token limit |
 | `CLAUDE_CODE_MAX_CONTEXT_TOKENS` | Override context window size Claude Code assumes for the active model. Only takes effect when `DISABLE_COMPACT` is also set |
 | `CLAUDE_CODE_MAX_TURNS` | Cap the number of agentic turns per session. Equivalent to `--max-turns` (the flag takes precedence when both are set) |

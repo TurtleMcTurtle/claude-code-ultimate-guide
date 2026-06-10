@@ -32,11 +32,11 @@ Above 200K input tokens, **all context tokens** are billed at the premium rate, 
 | Opus 4.6 | 93% | 76% |
 | Sonnet 4.5 | n/a | 18.5% |
 
-Opus 4.6 remains usable at 1M (76% precision), but degradation is measurable. Sonnet collapses and is not recommended beyond 200K for precise tasks.
+Opus 4.8 remains usable at 1M (76% precision), but degradation is measurable. Sonnet collapses and is not recommended beyond 200K for precise tasks.
 
 ## Cost per Session (Approximate)
 
-| Session type | Tokens in | Sonnet 4.6 | Opus 4.6 |
+| Session type | Tokens in | Sonnet 4.6 | Opus 4.8 |
 |-------------|-----------|-----------|---------|
 | PR review (≤200K) | 50K | ~$0.23 | ~$0.38 |
 | Refactoring (≤200K) | 150K | ~$0.75 | ~$1.25 |
@@ -60,7 +60,7 @@ The community rule: 200K + RAG by default, 1M Opus reserved for cases where load
 
 ```python
 response = client.messages.create(
-    model="claude-opus-4-6",
+    model="claude-opus-4-8",
     extra_headers={
         "anthropic-beta": "context-1m-2025-08-07"
     },

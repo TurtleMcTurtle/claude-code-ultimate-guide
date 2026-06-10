@@ -1982,8 +1982,10 @@ Ces commandes ont été ajoutées progressivement entre v2.1.71 et v2.1.77. Elle
 
 | Modèle | Alias `/model` | Coupure connaissance |
 |--------|---------------|----------------------|
+| Claude Fable 5 | `claude-fable-5` | Juin 2026 |
 | Claude Sonnet 4.6 | `sonnet` | Août 2025 |
-| Claude Opus 4.6 | `opus` | Mai 2025 |
+| Claude Opus 4.8 | `opus` | Actuel |
+| Claude Opus 4.6 | (génération précédente) | Mai 2025 |
 | Claude Haiku 4.5 | `haiku` | Fév. 2025 |
 
 ## Raccourcis Clavier

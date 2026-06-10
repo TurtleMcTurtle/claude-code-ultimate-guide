@@ -61,7 +61,7 @@ Applicability condition: modules must have zero shared state. If agents constant
 
 ## Isolation and permissions per agent
 
-Each agent has its own context window (1M tokens with Opus 4.6) and can receive a distinct tool whitelist. Limiting an agent to `Read`, `Glob`, `Grep` tools prevents any accidental modification during the analysis phase.
+Each agent has its own context window (1M tokens with Opus 4.8) and can receive a distinct tool whitelist. Limiting an agent to `Read`, `Glob`, `Grep` tools prevents any accidental modification during the analysis phase.
 
 | Agent | Allowed tools |
 |-------|--------------|
@@ -85,7 +85,7 @@ claude
 }
 ```
 
-Prerequisites: Claude Code v2.1.32+, Opus 4.6 model (`/model opus`), initialized git repository. Navigate between agents with `Shift+Down` in in-process mode.
+Prerequisites: Claude Code v2.1.32+, Opus 4.8 recommended, Opus 4.6+ compatible (`/model opus`), initialized git repository. Navigate between agents with `Shift+Down` in in-process mode.
 
 ## Guardrails (v3.38.0)
 
@@ -93,7 +93,7 @@ Three essential controls for autonomous agent teams:
 
 **Loops** — `MAX_ITERATIONS=8` and a mandatory reflection prompt before each cycle. If an agent hits the limit, kill or reassign rather than letting it keep running.
 
-**Dedicated Reviewer** — 1 read-only Opus 4.6 agent (tools `Read/Grep/Glob`) auto-triggered on `TaskCompleted`, for every 4 worker agents. Ratio 1:4. (Credit: Addy Osmani)
+**Dedicated Reviewer**: 1 read-only Opus 4.8 agent (tools `Read/Grep/Glob`) auto-triggered on `TaskCompleted`, for every 4 worker agents. Ratio 1:4. (Credit: Addy Osmani)
 
 **Token budget per agent** — Set a hard token limit per agent; auto-pause at 85% for human verification before continuing.
 

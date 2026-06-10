@@ -86,13 +86,13 @@ Tout choix architectural a un prix. L'absence d'orchestrateur offre de la flexib
 | Moins de bugs | Les erreurs du modèle affectent tout |
 | Itération rapide | Nécessite un modèle de qualité |
 
-Ce compromis est au cœur de la philosophie Anthropic : plutôt que multiplier les couches de contrôle, investir dans la qualité du modèle lui-même. Chaque composant supprimé (classifieur, routeur, orchestrateur) est une surface de défaillance en moins et un vecteur de rigidité éliminé. Mais cela signifie aussi que la qualité de l'expérience dépend directement de la qualité du raisonnement du modèle, d'où l'importance d'Opus 4.6.
+Ce compromis est au cœur de la philosophie Anthropic : plutôt que multiplier les couches de contrôle, investir dans la qualité du modèle lui-même. Chaque composant supprimé (classifieur, routeur, orchestrateur) est une surface de défaillance en moins et un vecteur de rigidité éliminé. Mais cela signifie aussi que la qualité de l'expérience dépend directement de la qualité du raisonnement du modèle, d'où l'importance d'Opus 4.8.
 
-## Opus 4.6 : Thinking Auto-Adaptatif
+## Opus 4.8 : Thinking Auto-Adaptatif
 
 **Introduit** : Février 2026
 
-Claude Opus 4.6 ajuste automatiquement sa profondeur de raisonnement selon la complexité de la tâche :
+Claude Opus 4.8 ajuste automatiquement sa profondeur de raisonnement selon la complexité de la tâche :
 
 | Complexité Tâche | Thinking Tokens | Exemple |
 |------------------|-----------------|---------|
@@ -107,7 +107,7 @@ Claude Opus 4.6 ajuste automatiquement sa profondeur de raisonnement selon la co
 - Qualité supérieure sur tasks complexes
 - Coût : ~$15/1M input, $75/1M output (thinking facturé au tarif output)
 
-**Activation** : Automatique avec Opus 4.6 (`/model opus`)
+**Activation** : Automatique avec Opus 4.8 (`/model opus`)
 
 ## Opus 4.7 : Niveau d'Effort `xhigh`
 
@@ -302,7 +302,7 @@ Ces fonctionnalités sont disponibles via l'Agent SDK/API (pas le CLI directemen
 
 ## Budget Contexte (~200K tokens)
 
-> **Note** : 200K tokens (standard) ; 1M tokens disponible en beta pour Opus 4.6 et Sonnet 4.6 (usage tier 4 requis, header `context-1m-2025-08-07`). Voir ci-dessous la comparaison 200K vs 1M.
+> **Note** : 200K tokens (standard) ; 1M tokens disponible pour Opus 4.8 et Sonnet 4.6 (usage tier 4 requis, header `context-1m-2025-08-07`). Voir ci-dessous la comparaison 200K vs 1M.
 
 ```
 [ CONTEXT BUDGET ~200K tokens ]
@@ -564,7 +564,7 @@ Leïla debug un problème de performance sur l'API de paiement. Plutôt que lire
 
 # Agent Teams : Coordination Autonome
 
-**Status** : Expérimental (v2.1.32+, Opus 4.6+ requis)
+**Status** : Expérimental (v2.1.32+, Opus 4.8 recommandé, Opus 4.6+ compatible)
 
 Les sub-agents résolvent le problème de l'isolation contexte, mais restent synchrones et limités à depth 1. Pour les tâches nécessitant une coordination réelle entre plusieurs agents autonomes (chacun avec son propre context window de 1M tokens), les Agent Teams représentent l'étape suivante.
 
@@ -581,7 +581,7 @@ Les sub-agents résolvent le problème de l'isolation contexte, mais restent syn
 
 **Capacités clés** :
 
-- Contexte isolé 1M tokens/agent (Opus 4.6)
+- Contexte isolé 1M tokens/agent (Opus 4.8)
 - Communication peer-to-peer via mailbox (pas juste hiérarchique)
 - Coordination git-based (locks, merge automatique)
 - Débat solutions entre agents (challenge approches)
@@ -919,9 +919,9 @@ Le paysage des coding agents évolue vite, mais les différences architecturales
 |-----------|-------------|--------------------------|--------|
 | **Architecture** | while(tool) loop | Cloud-based planning | Event-driven + cloud |
 | **Exécution** | Local terminal | Cloud sandbox | Local + cloud |
-| **Modèle** | Claude (Sonnet 4.6 par défaut, Opus 4.7) | GPT-4o/o3-mini/Claude | Multiple (adaptive) |
+| **Modèle** | Claude (Sonnet 4.6 par défaut, Opus 4.8) | GPT-4o/o3-mini/Claude | Multiple (adaptive) |
 | **Contexte** | 200K–1M tokens | 128K–200K (selon modèle)^[GPT-4o : 128K, o3-mini et Claude via Copilot : 200K. Source : GitHub Copilot docs, nov. 2025. Vérifié fév. 2026.] | Non publié officiellement |
-| **Thinking** | Opus 4.7 (xhigh par défaut), Opus 4.6 (auto-depth) | Non | Non |
+| **Thinking** | Opus 4.8 (xhigh par défaut), Opus 4.6+ (auto-depth) | Non | Non |
 | **Agent Teams** | Oui (expérimental) | Non | Non |
 | **Transparence** | Élevée (visible reasoning) | Moyenne | Moyenne |
 | **Custom** | CLAUDE.md + hooks + agents | Limité | Plugins |

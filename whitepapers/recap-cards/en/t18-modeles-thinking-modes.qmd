@@ -20,7 +20,8 @@ format:
 |-------|---------------|-----------|
 | **Haiku 4.5** | $0.80 | Mechanical tasks, CI/CD |
 | **Sonnet 4.6** | $3.00 | Day-to-day development (default) |
-| **Opus 4.6** | $5.00 | Architecture, security, audits |
+| **Fable 5** | See official docs | Most complex tasks (Mythos-class) |
+| **Opus 4.8** | See official docs | Architecture, security, audits |
 
 Sonnet is the natural starting point, covering 80% of use cases. Haiku cuts the cost by 4x on repetitive tasks (test generation, mass renaming). Opus only comes into play when deep reasoning genuinely changes the quality of the result.
 
@@ -46,16 +47,16 @@ claude --model opus "Design the auth system"
 | System architecture | Opus | high |
 | Critical security audit | Opus | max |
 
-## Thinking Modes (Opus 4.6)
+## Thinking Modes (Opus 4.8)
 
-Opus 4.6 uses **Adaptive Thinking**: the model dynamically allocates its compute budget based on request complexity. The `effort` parameter controls this depth.
+Opus 4.8 uses **Adaptive Thinking**: the model dynamically allocates its compute budget based on request complexity. The `effort` parameter controls this depth.
 
 **Effort levels**:
 
 - **low**: zero preamble, combined operations, mechanical tasks
 - **medium**: defined pattern, bounded scope, single concern
 - **high**: design decisions, edge cases, multiple concerns
-- **max**: cross-system reasoning, irreversible decisions (Opus 4.6 only)
+- **max**: cross-system reasoning, irreversible decisions (Opus 4.8+)
 
 ## Controlling Thinking
 
@@ -65,7 +66,7 @@ Alt+T          Toggle on/off (current session)
 /model + ←/→  Effort slider low|medium|high
 ```
 
-The keywords `ultrathink` and `think hard` have had no functional effect since v2.0.67. Adaptive thinking is active by default on Opus 4.6.
+The keywords `ultrathink` and `think hard` have had no functional effect since v2.0.67. Adaptive thinking is active by default on Opus 4.8.
 
 ## Golden Rule
 

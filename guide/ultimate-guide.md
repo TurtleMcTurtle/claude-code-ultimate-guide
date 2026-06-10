@@ -2225,22 +2225,24 @@ Claude Code isn't free - you're using API credits. Understanding costs helps opt
 
 #### Pricing Model (as of April 2026)
 
-The default model depends on your subscription: **Max/Team Premium** subscribers get **Opus 4.7** by default, while **Pro/Team Standard** subscribers get **Sonnet 4.6**. If Opus usage hits the plan threshold, it auto-falls back to Sonnet.
+The default model depends on your subscription: **Max/Team Premium** subscribers get **Opus 4.8** by default, while **Pro/Team Standard** subscribers get **Sonnet 4.6**. If Opus usage hits the plan threshold, it auto-falls back to Sonnet.
 
-> **Model lineup (April 2026)**: Claude Opus 4.7 is the standard production Opus model (`claude-opus-4-7`). Claude Mythos Preview is more capable but remains in limited release. Opus 4.7 is the recommended upgrade path from Opus 4.6. For workflows where Opus 4.6's lower token footprint outweighs 4.7's newer features, see [Pinning Opus 4.6](#pinning-opus-46-community-hack) in the OpusPlan section.
+> **Model lineup (June 2026)**: Claude Opus 4.8 (`claude-opus-4-8`) is the current standard production Opus. Claude Fable 5 (`claude-fable-5`, Mythos-class) is the most capable model available, exceeding any previously GA Anthropic model ([announcement](https://www.anthropic.com/news/claude-fable-5-mythos-5)). Opus 4.7 and 4.6 are previous-generation; for workflows where Opus 4.6's lower token footprint is intentional, see [Pinning Opus 4.6](#pinning-opus-46-community-hack) in the OpusPlan section.
 
 | Model | Input (per 1M tokens) | Output (per 1M tokens) | Context Window | Notes |
 |-------|----------------------|------------------------|----------------|-------|
+| **Fable 5** | See official docs | See official docs | See official docs | Mythos-class, most capable; [specs](https://www.anthropic.com/pricing) |
+| **Opus 4.8** | See official docs | See official docs | 200K tokens | Current default for Max/Team Premium; high effort default |
+| Opus 4.8 (fast mode) | See official docs | See official docs | 200K tokens | Fast mode: 2.5x faster, 2x price |
 | **Sonnet 4.6** | $3.00 | $15.00 | 200K tokens | Default (Pro/Team Standard) |
 | Sonnet 4.5 | $3.00 | $15.00 | 200K tokens | Legacy |
-| **Opus 4.7** | $5.00 | $25.00 | 200K tokens | Released April 2026; default for Max/Team Premium |
-| Opus 4.7 (1M context) | $5.00 | $25.00 | 1M tokens | GA for Max/Team/Enterprise; API requires tier 4 |
+| Opus 4.7 | $5.00 | $25.00 | 200K tokens | Previous generation |
+| Opus 4.7 (1M context) | $5.00 | $25.00 | 1M tokens | Previous generation |
 | Opus 4.6 (standard) | $5.00 | $25.00 | 200K tokens | Previous generation |
 | Opus 4.6 (1M context) | $5.00 | $25.00 | 1M tokens | Previous generation |
-| Opus 4.6 (fast mode) | $30.00 | $150.00 | 200K tokens | Fast mode; 2.5x faster, 6x price |
 | Haiku 4.5 | $0.80 | $4.00 | 200K tokens | Budget option |
 
-> **Opus 4.7 tokenizer**: A new tokenizer means the same input can map to roughly **1.0–1.35×** more tokens depending on content type. At higher effort levels, Opus 4.7 also produces more output tokens (more reasoning). Measure your real traffic when migrating from Opus 4.6; use the `effort` parameter to control spend.
+> **Pricing note**: Opus 4.8 and Fable 5 standard pricing is not yet published in any tracked source. Check [anthropic.com/pricing](https://www.anthropic.com/pricing) for current rates. Fast mode on Opus 4.8 runs at 2.5x speed at 2x the standard price (changed from 4.6's 6x). Use the `effort` parameter to control spend.
 
 **Reality check**: A typical 1-hour session costs **$0.10 - $0.50** depending on usage patterns.
 
@@ -2276,14 +2278,14 @@ For comparison: Gemini 1.5 Pro offers a 2M context window at $3.50/$10.50/MTok �
 
 | Scenario | Recommendation |
 |----------|---------------|
-| Bug fix, PR review, daily coding | Sonnet 4.6 @ 200K — fast and cheap |
-| Full-repo audit, entire codebase load | Opus 4.7 @ 1M — worth the cost for precision |
-| Cross-module refactoring | Sonnet 4.6 @ 1M — but weigh cost vs. chunking + RAG |
-| Architecture analysis, Agent Teams | Opus 4.7 @ 1M — strongest retrieval at scale |
-| Large-document RAG (PDFs, legal, books) | Consider Gemini 1.5 Pro — cheaper at this scale |
+| Bug fix, PR review, daily coding | Sonnet 4.6 @ 200K (fast and cheap) |
+| Full-repo audit, entire codebase load | Opus 4.8 @ 1M (worth the cost for precision) |
+| Cross-module refactoring | Sonnet 4.6 @ 1M (weigh cost vs. chunking + RAG) |
+| Architecture analysis, Agent Teams | Opus 4.8 @ 1M (strongest retrieval at scale) |
+| Large-document RAG (PDFs, legal, books) | Consider Gemini 1.5 Pro (cheaper at this scale) |
 
 **Key facts**
-- Opus 4.7 max output: **128K tokens** (same as Opus 4.6); Sonnet 4.6 max output: **64K tokens**
+- Opus 4.8 max output: **128K tokens** (same as prior Opus generations); Sonnet 4.6 max output: **64K tokens**
 - 1M context ≈ 30,000 lines of code / 750,000 words
 - 1M context is **GA for Max/Team/Enterprise Claude Code plans** (v2.1.75, March 2026) — API direct use still requires tier 4 or custom rate limits
 - API direct use above 200K input tokens: Sonnet 4.6 doubles to $6/$22.50/MTok; Opus 4.6 doubles to $10/$37.50/MTok (standard rate applies for Claude Code Max/Team/Enterprise plans)
@@ -3505,7 +3507,7 @@ _Quick jump:_ [Decision Table](#decision-table) · [Effort Levels](#effort-level
 
 ### Effort Levels
 
-The `effort` parameter (Opus 4.6 API) controls the model's **overall computational budget** — not just thinking tokens, but tool calls, verbosity, and analysis depth. Low effort = fewer tool calls, no preamble. High effort = more explanations, detailed analysis.
+The `effort` parameter (Opus 4.6+ API) controls the model's overall computational budget: not just thinking tokens, but tool calls, verbosity, and analysis depth. Low effort = fewer tool calls, no preamble. High effort = more explanations, detailed analysis.
 
 **Calibrated gradient — one real prompt per level:**
 
@@ -14792,7 +14794,7 @@ The most powerful Claude Code pattern combines three techniques:
 | **Opus 4.6** (Feb 2026) | **Adaptive thinking** (dynamic depth) | `effort` parameter (API), Alt+T (CLI) |
 | **Opus 4.7** (Apr 2026) | **Adaptive thinking + xhigh** (new effort level) | `effort` parameter (API), Alt+T (CLI) |
 
-#### Adaptive Thinking (Opus 4.6 and Opus 4.7)
+#### Adaptive Thinking (Opus 4.6+, including Opus 4.8)
 
 **How it works**: The `effort` parameter controls the model's **overall computational budget** — not just thinking tokens, but the entire response including text generation and tool calls. The model dynamically allocates this budget based on query complexity.
 
@@ -14815,7 +14817,7 @@ The most powerful Claude Code pattern combines three techniques:
 **API syntax**:
 ```python
 response = client.messages.create(
-    model="claude-opus-4-7",
+    model="claude-opus-4-8",
     max_tokens=16000,
     output_config={"effort": "xhigh"},  # low|medium|high|xhigh|max
     messages=[{"role": "user", "content": "Analyze..."}]
@@ -14893,11 +14895,11 @@ claude -p "Analyze this architecture."
 - **`assistant-prefill`**: Deprecated on Opus 4.6. Previously allowed pre-filling Claude's response to guide output format. Now unsupported — use system prompts or examples instead.
 
 **New features**:
-- **Fast mode API**: Add `speed: "fast"` + beta header `fast-mode-2026-02-01` for 2.5x faster responses (6x cost)
+- **Fast mode API**: Add `speed: "fast"` + beta header `fast-mode-2026-02-01` for 2.5x faster responses (2x cost on Opus 4.8)
   ```python
   response = client.messages.create(
-      model="claude-opus-4-6",
-      speed="fast",  # 2.5x faster, 6x price
+      model="claude-opus-4-8",
+      speed="fast",  # 2.5x faster, 2x price
       headers={"anthropic-beta": "fast-mode-2026-02-01"},
       messages=[...]
   )
@@ -16873,7 +16875,7 @@ exit 0  # Allow
 - Use `--add-dir` to allow tool access to directories outside the current working directory
 - Manage thinking mode for cost efficiency:
   - Simple tasks: Alt+T to disable thinking → faster, cheaper
-  - Complex tasks: Leave thinking enabled (default in Opus 4.6)
+  - Complex tasks: Leave thinking enabled (default in Opus 4.8)
   - `ultrathink` keyword forces high effort for the next turn specifically (re-introduced in v2.1.68)
 - Set `cleanupPeriodDays` in config to prune old sessions automatically
 - Re-enable thinking summaries if needed: add `"showThinkingSummaries": true` to settings.json (off by default in interactive sessions since v2.1.89)
@@ -19397,7 +19399,7 @@ Boris Cherny, creator of Claude Code, shared his workflow orchestrating 5-15 Cla
 - **5-10 instances** on claude.ai/code (`--teleport` to sync with local)
 - **Git worktrees** for isolation (each instance = separate checkout)
 - **CLAUDE.md**: 2.5k tokens, team-shared and versioned in git
-- **Model**: Opus 4.6 or Opus 4.7 (slower but fewer corrections needed, adaptive thinking)
+- **Model**: Opus 4.8 (slower but fewer corrections needed, adaptive thinking)
 - **Slash commands**: `/commit-push-pr` used "dozens of times per day"
 
 **Results** (30 days, January 2026):
@@ -19419,7 +19421,7 @@ Boris Cherny, creator of Claude Code, shared his workflow orchestrating 5-15 Cla
 
 > **On verification loops**: "I give Claude a way to verify output (browser/tests): verification drives quality."
 
-**Why Opus 4.6 or Opus 4.7 with Adaptive Thinking**: Although more expensive per token ($5/1M input vs $3/1M for Sonnet), Opus requires fewer correction iterations thanks to adaptive thinking. Net result: faster delivery and lower total cost despite higher unit price.
+**Why Opus 4.8 with Adaptive Thinking**: Although more expensive per token than Sonnet, Opus requires fewer correction iterations thanks to adaptive thinking. Net result: faster delivery and lower total cost despite higher unit price.
 
 **The supervision model**: Boris describes his role as "tending to multiple agents" rather than "doing every click yourself." The workflow becomes about **steering outcomes** across 5-10 parallel sessions, unblocking when needed, rather than sequential execution.
 
@@ -22586,7 +22588,7 @@ I'll decide based on our team context.
 
 **Reading time**: 5 minutes (overview) | [Quick Start →](./workflows/agent-teams-quick-start.md) (8-10 min, practical) | [Full workflow guide →](./workflows/agent-teams.md) (~30 min, theory)
 **Skill level**: Month 2+ (Advanced)
-**Status**: ⚠️ Experimental (v2.1.32+, Opus 4.6 or Opus 4.7 required)
+**Status**: ⚠️ Experimental (v2.1.32+, Opus 4.8 recommended, Opus 4.6+ compatible)
 
 ### What Are Agent Teams?
 
@@ -22612,7 +22614,7 @@ OR in ~/.claude/settings.json:
 ### When Introduced & Production Validation
 
 **Version**: v2.1.32 (2026-02-05) as research preview
-**Model requirement**: Opus 4.6 or Opus 4.7 minimum
+**Model requirement**: Opus 4.8 recommended (Opus 4.6+ compatible)
 
 **Production metrics** (validated cases):
 - **Fountain** (workforce management): 50% faster screening, 2x conversions
@@ -23934,7 +23936,7 @@ _Quick jump:_ [Commands Table](#101-commands-table) · [Keyboard Shortcuts](#102
 | `/doctor` | Run diagnostics and troubleshooting checks | Debug |
 | `/execute` | Exit Plan Mode | Mode |
 | `/exit` | Exit Claude Code | Session |
-| `/fast` | Toggle fast mode (Opus 4.6, 2.5x faster, 6x price) | Mode |
+| `/fast` | Toggle fast mode (Opus 4.8, 2.5x faster, 2x price) | Mode |
 | `/hooks` | Interactive hook configuration | Config |
 | `/init` | Generate starter CLAUDE.md based on project structure — ⚠️ output is LLM-generated; review and prune before committing (ETH Zürich research shows auto-generated context files reduce agent task success by ~3% and add 20%+ inference cost) | Config |
 | `/login` | Log in to Claude account | Auth |

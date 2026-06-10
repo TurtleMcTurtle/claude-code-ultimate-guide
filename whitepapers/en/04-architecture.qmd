@@ -85,13 +85,13 @@ Every architectural choice has a price. The absence of an orchestrator provides 
 | Fewer bugs | Model errors affect everything |
 | Fast iteration | Requires a quality model |
 
-This trade-off is at the core of Anthropic's philosophy: rather than stacking control layers, invest in the model's quality itself. Every removed component (classifier, router, orchestrator) is one fewer failure surface and one fewer source of rigidity. But it also means experience quality depends directly on model reasoning quality, hence the importance of Opus 4.6.
+This trade-off is at the core of Anthropic's philosophy: rather than stacking control layers, invest in the model's quality itself. Every removed component (classifier, router, orchestrator) is one fewer failure surface and one fewer source of rigidity. But it also means experience quality depends directly on model reasoning quality, hence the importance of Opus 4.8.
 
-## Opus 4.6: Auto-Adaptive Thinking
+## Opus 4.8: Auto-Adaptive Thinking
 
 **Introduced**: February 2026
 
-Claude Opus 4.6 automatically adjusts its reasoning depth based on task complexity:
+Claude Opus 4.8 automatically adjusts its reasoning depth based on task complexity:
 
 | Task Complexity | Thinking Tokens | Example |
 |-----------------|-----------------|---------|
@@ -105,7 +105,7 @@ Claude Opus 4.6 automatically adjusts its reasoning depth based on task complexi
 - Superior quality on complex tasks
 - Cost: ~$15/1M input, $75/1M output (thinking billed at output rate)
 
-**Activation**: Automatic with Opus 4.6 (`/model opus`)
+**Activation**: Automatic with Opus 4.8 (`/model opus`)
 
 ## Opus 4.7: The `xhigh` Effort Level
 
@@ -299,7 +299,7 @@ These features are available via the Agent SDK/API (not the CLI directly) and ap
 
 ## Context Budget (~200K tokens)
 
-> **Note**: 200K tokens (standard); 1M tokens available in beta for Opus 4.6 and Sonnet 4.6 (usage tier 4 required, header `context-1m-2025-08-07`). See below for the 200K vs 1M comparison.
+> **Note**: 200K tokens (standard); 1M tokens available for Opus 4.8 and Sonnet 4.6 (usage tier 4 required, header `context-1m-2025-08-07`). See below for the 200K vs 1M comparison.
 
 ```
   CONTEXT BUDGET ~200K tokens
@@ -568,7 +568,7 @@ Leila is debugging a performance issue on the payment API. Rather than reading a
 
 # Agent Teams: Autonomous Coordination
 
-**Status**: Experimental (v2.1.32+, Opus 4.6+ required)
+**Status**: Experimental (v2.1.32+, Opus 4.8 recommended, Opus 4.6+ compatible)
 
 Sub-agents solve the context isolation problem but remain synchronous and limited to depth 1. For tasks requiring real coordination between multiple autonomous agents (each with its own 1M-token context window), Agent Teams represent the next step.
 
@@ -591,7 +591,7 @@ Sub-agents solve the context isolation problem but remain synchronous and limite
 ```
 
 **Key capabilities**:
-- Isolated 1M token context/agent (Opus 4.6)
+- Isolated 1M token context/agent (Opus 4.8)
 - Peer-to-peer communication via mailbox (not just hierarchical)
 - Git-based coordination (locks, automatic merge)
 - Solution debate between agents (challenge approaches)
@@ -930,9 +930,9 @@ The coding agent landscape evolves fast, but fundamental architectural differenc
 |-----------|-------------|--------------------------|--------|
 | **Architecture** | while(tool) loop | Cloud-based planning | Event-driven + cloud |
 | **Execution** | Local terminal | Cloud sandbox | Local + cloud |
-| **Model** | Claude (Sonnet 4.6 default, Opus 4.7) | GPT-4o/o3-mini/Claude | Multiple (adaptive) |
+| **Model** | Claude (Sonnet 4.6 default, Opus 4.8) | GPT-4o/o3-mini/Claude | Multiple (adaptive) |
 | **Context** | 200K–1M tokens | 128K–200K (model-dependent)^[GPT-4o: 128K, o3-mini and Claude via Copilot: 200K. Source: GitHub Copilot docs, Nov. 2025. Verified Feb. 2026.] | Not publicly disclosed |
-| **Thinking** | Opus 4.7 (xhigh default), Opus 4.6 (auto-depth) | No | No |
+| **Thinking** | Opus 4.8 (xhigh default), Opus 4.6+ (auto-depth) | No | No |
 | **Agent Teams** | Yes (experimental) | No | No |
 | **Transparency** | High (visible reasoning) | Medium | Medium |
 | **Custom** | CLAUDE.md + hooks + agents | Limited | Plugins |

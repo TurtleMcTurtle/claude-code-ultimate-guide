@@ -20,7 +20,8 @@ format:
 |--------|--------------|------------|
 | **Haiku 4.5** | $0.80 | Tâches mécaniques, CI/CD |
 | **Sonnet 4.6** | $3.00 | Développement quotidien (défaut) |
-| **Opus 4.6** | $5.00 | Architecture, sécurité, audit |
+| **Fable 5** | Voir docs officielles | Tâches les plus complexes (Mythos-class) |
+| **Opus 4.8** | Voir docs officielles | Architecture, sécurité, audit |
 
 Sonnet est le point de départ naturel, couvrant 80% des cas d'usage. Haiku divise le coût par 4 sur les tâches répétitives (génération de tests, renommage massif). Opus entre en jeu uniquement quand le raisonnement profond change réellement la qualité du résultat.
 
@@ -46,16 +47,16 @@ claude --model opus "Design the auth system"
 | Architecture système | Opus | high |
 | Audit sécurité critique | Opus | max |
 
-## Thinking Modes (Opus 4.6)
+## Thinking Modes (Opus 4.8)
 
-Opus 4.6 utilise l'**Adaptive Thinking** : le modèle alloue dynamiquement son budget de calcul selon la complexité de la requête. Le paramètre `effort` contrôle cette profondeur.
+Opus 4.8 utilise l'**Adaptive Thinking** : le modèle alloue dynamiquement son budget de calcul selon la complexité de la requête. Le paramètre `effort` contrôle cette profondeur.
 
 **Niveaux d'effort** :
 
 - **low** : zéro preamble, opérations combinées, tâches mécaniques
 - **medium** : pattern défini, scope borné, une seule préoccupation
 - **high** : décisions de design, edge cases, multiple préoccupations
-- **max** : raisonnement cross-système, décisions irréversibles (Opus 4.6 uniquement)
+- **max** : raisonnement cross-système, décisions irréversibles (Opus 4.8+)
 
 ## Contrôler le Thinking
 
@@ -65,7 +66,7 @@ Alt+T          Activer/désactiver (session courante)
 /model + ←/→  Slider effort low|medium|high
 ```
 
-Les keywords `ultrathink`, `think hard` n'ont plus d'effet fonctionnel depuis v2.0.67. Le thinking adaptatif est actif par défaut sur Opus 4.6.
+Les keywords `ultrathink`, `think hard` n'ont plus d'effet fonctionnel depuis v2.0.67. Le thinking adaptatif est actif par défaut sur Opus 4.8.
 
 ## Règle d'Or
 

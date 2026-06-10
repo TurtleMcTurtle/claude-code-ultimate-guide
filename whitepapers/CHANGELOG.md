@@ -11,6 +11,13 @@ Suivi des versions des ebooks, indépendamment de la version du guide.
 
 ---
 
+## [2026-06-10] v3.40.0: WP11 FR frontmatter sync
+
+### Fixed
+- **WP11 FR** (Piloter une Équipe): version bumped from 3.38.3 to 3.40.0 to match EN counterpart. Date aligned to 2026-05-12. wp-version bumped to 1.0.1 (patch: metadata correction). Bodies confirmed identical via full content comparison — no translation work needed.
+
+---
+
 ## [2026-05-21] v3.41.0 — Whitepaper 12 Agent Engineering (initial release)
 
 ### Added

@@ -469,6 +469,23 @@ deep_dive:
   enterprise_governance_hook: "examples/hooks/bash/governance-enforcement-hook.sh"
   enterprise_governance_audience: "Tech leads, engineering managers, security officers"
   enterprise_governance_scope: "Org-level policy (vs security-hardening.md = individual dev security)"
+  # Data Privacy & Retention (guide/security/data-privacy.md) - Added 2026-06-10
+  data_privacy_guide: "guide/security/data-privacy.md"
+  data_privacy_retention_summary: "guide/security/data-privacy.md#tl-dr---retention-summary"
+  data_privacy_data_flow: "guide/security/data-privacy.md#1-understanding-the-data-flow"
+  data_privacy_retention_policies: "guide/security/data-privacy.md#2-anthropic-retention-policies"
+  data_privacy_zdr: "guide/security/data-privacy.md#tier-4-zero-data-retention-zdr"
+  data_privacy_known_risks: "guide/security/data-privacy.md#3-known-risks"
+  data_privacy_bug_command: "guide/security/data-privacy.md#risk-4-the-bug-command-sends-everything-retained-5-years"
+  data_privacy_browser_native_messaging: "guide/security/data-privacy.md#risk-6-claude-desktop-browser-integration"
+  data_privacy_protective_measures: "guide/security/data-privacy.md#4-protective-measures"
+  data_privacy_file_exclusions: "guide/security/data-privacy.md#42-configure-file-exclusions"
+  data_privacy_telemetry_optout: "guide/security/data-privacy.md#44-opt-out-of-telemetry-and-error-reporting"
+  data_privacy_enterprise_zdr: "guide/security/data-privacy.md#6-enterprise-considerations"
+  data_privacy_gdpr_hipaa: "guide/security/data-privacy.md#when-to-use-enterprise-api-zdr"
+  data_privacy_checklist: "guide/security/data-privacy.md#quick-checklist"
+  data_privacy_ip_considerations: "guide/security/data-privacy.md#8-intellectual-property-considerations"
+  data_privacy_description: "Data flow, retention tiers (5y/30d/ZDR), known risks (/bug command, .env exposure, MCP DB), protective measures, GDPR/HIPAA/PCI compliance"
   # Third-Party Tools (guide/ecosystem/third-party-tools.md) - Added 2026-02-01
   third_party_tools_guide: "guide/ecosystem/third-party-tools.md"
   third_party_tools_cost_tracking: "guide/ecosystem/third-party-tools.md:42"
@@ -653,7 +670,7 @@ deep_dive:
   fast_mode_command: 720  # /fast in commands table
   fast_mode_api: 720  # API breaking changes section
   fast_mode_pricing: 1788  # Pricing table
-  fast_mode_behavior: "2.5x faster, 6x price, same Opus 4.6 model"
+  fast_mode_behavior: "2.5x faster, 2x price, Opus 4.8 model"
   # Sonnet 4.6 + 1M Context (Feb 2026) - Added 2026-02-18
   sonnet_4_6_default: 1887  # Pricing table, Sonnet 4.6 now default
   context_200k_vs_1m: 1793  # Decision guide: 200K vs 1M context window
@@ -1088,7 +1105,7 @@ deep_dive:
   agent_teams_best_practices: "guide/workflows/agent-teams.md:928"
   agent_teams_troubleshooting: "guide/workflows/agent-teams.md:1092"
   agent_teams_experimental_flag: "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=true"
-  agent_teams_model_requirement: "Opus 4.6 minimum"
+  agent_teams_model_requirement: "Opus 4.8 recommended (Opus 4.6+ compatible)"
   agent_teams_sources:
     - "https://www.anthropic.com/news/claude-opus-4-6"
     - "https://www.anthropic.com/engineering/building-c-compiler"
@@ -1694,7 +1711,7 @@ cost:
   sonnet: "most development ($$)"
   opus: "architecture, complex bugs ($$$)"
   opusplan: "plan=opus + execute=sonnet ($$)"
-  ultraplan: "cloud planning (multi-agent Opus 4.6) + browser review + web or terminal execution (v2.1.91+)"
+  ultraplan: "cloud planning (multi-agent Opus 4.8) + browser review + web or terminal execution (v2.1.91+)"
   tip: "--add-dir grants tool access to additional directories (permissions, not context loading)"
   rtk: "Command output filtering (72.6% avg reduction) - rtk git log/status/diff"
 

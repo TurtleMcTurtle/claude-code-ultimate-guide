@@ -23,7 +23,7 @@ Quick-reference for Claude Code community patterns, workflow terms, and AI engin
 | 150K ceiling | Practical effective context limit where output quality degrades, even when the nominal window is larger. See [context-engineering.md](./context-engineering.md). | Architecture | Context |
 | ACE pipeline | Assemble, Check, Execute: the three-phase config-persistence loop for intentional context management across sessions. Distinct from arXiv:2510.04618 (same acronym, inference-time context evolution, different concept). ACE-v2 adds signal taxonomy, PR-based loop closure, and ejection. See [context-engineering.md §§10-14](./context-engineering.md#10-signal-taxonomy-and-causal-attribution). | AI Engineering | Context |
 | Act Mode | Normal execution mode where Claude can read, write, and run commands. Opposite of Plan Mode. | Claude Code | Modes |
-| Adaptive thinking | Opus 4.6 feature: dynamically adjusts reasoning depth based on detected task complexity, without manual configuration. | Models | Thinking |
+| Adaptive thinking | Opus 4.6+ feature: dynamically adjusts reasoning depth based on detected task complexity, without manual configuration. | Models | Thinking |
 | Agent | A specialized AI persona defined in a markdown file with a role, tool list, and behavioral instructions. Stored in `.claude/agents/`. | Claude Code | Extensibility |
 | Agent teams | Experimental feature (v2.1.32+) enabling multi-agent coordination and messaging within a single Claude Code session. | Claude Code | Multi-Agent |
 | Agentic coding | Development style where AI agents perform multi-step tasks autonomously with minimal per-step human intervention. | AI Engineering | Paradigm |
@@ -45,7 +45,8 @@ Quick-reference for Claude Code community patterns, workflow terms, and AI engin
 | Chain of Verification (CoVe) | Independent verifier pattern: a second agent re-checks the first agent's output to prevent confirmation bias. arXiv:2309.11495. | Workflow | Verification |
 | Checkpoint | A saved session state that can be restored via Esc x2 then /rewind. Created automatically before risky operations. | Claude Code | Session |
 | Claude Haiku 4.5 | Anthropic's fastest and cheapest model. Best for high-volume tasks, simple lookups, and cost-sensitive CI workflows. | Models | Tier |
-| Claude Opus 4.6 | Anthropic's most capable model. Best for deep reasoning, architecture decisions, and complex multi-step analysis. | Models | Tier |
+| Claude Opus 4.8 | Anthropic's current flagship Opus model. Best for deep reasoning, architecture decisions, and complex multi-step analysis. | Models | Tier |
+| Claude Fable 5 | Mythos-class model, exceeding any previously GA Anthropic model. See anthropic.com/pricing for specs. | Models | Tier |
 | Claude Sonnet 4.6 | Anthropic's balanced default model. Best mix of speed and capability for daily development work. | Models | Tier |
 | CLAUDE.md | Persistent memory file loaded automatically at session start. Contains project rules, conventions, and context. The foundation of Claude Code configuration. | Claude Code | Memory |
 | Co-Authored-By | Git trailer convention (`Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`) for attributing AI-assisted commits. | Operations | Attribution |
@@ -95,7 +96,7 @@ Quick-reference for Claude Code community patterns, workflow terms, and AI engin
 | Modular context architecture | Pattern of splitting CLAUDE.md into focused modules loaded dynamically via path-scoped rules, reducing per-session token overhead. | AI Engineering | Context |
 | multiclaude | Community self-hosted multi-agent spawner using tmux + git worktrees. Runs N Claude Code instances in parallel. | Ecosystem | Orchestration |
 | Native sandbox | Claude Code's built-in OS-level sandboxing: Seatbelt on macOS, bubblewrap on Linux. Limits filesystem and network access. | Security | Sandbox |
-| OpusPlan | Hybrid mode: Opus 4.6 handles planning (with thinking), Sonnet executes. Activates with `/model opusplan`. | Models | Configuration |
+| OpusPlan | Hybrid mode: Opus 4.8 handles planning (with thinking), Sonnet executes. Activates with `/model opusplan`. | Models | Configuration |
 | Packmind | Tool that distributes coding standards as `CLAUDE.md` files, slash commands, and skills across repositories and AI tools (Claude Code, Cursor, Copilot). | Ecosystem | Tools |
 | Permission modes | Five autonomy levels: Default, Auto-accept, Plan, Don't Ask, Bypass Permissions. Set per session or in `settings.json`. | Claude Code | Permissions |
 | Plan Mode | Read-only mode where Claude can analyze, search, and propose but cannot modify files. Activated with Shift+Tab or `/plan`. | Claude Code | Modes |
