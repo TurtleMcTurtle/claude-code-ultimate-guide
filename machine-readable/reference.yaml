@@ -4,7 +4,7 @@
 # Purpose: Condensed index for LLMs to quickly answer user questions about Claude Code
 
 version: "3.41.1"
-updated: "2026-05-24"
+updated: "2026-06-10"
 
 # ════════════════════════════════════════════════════════════════
 # DEEP DIVE - Line numbers in guide/ultimate-guide.md
@@ -257,6 +257,12 @@ deep_dive:
   bridge_schema: "examples/scripts/bridge-plan-schema.json"
   bridge_guide: "guide/ultimate-guide.md:20003"
   # Cost optimization - RTK (Rust Token Killer)
+  # Cost Optimization Levers table (Added 2026-06-10)
+  cost_levers_table: "guide/ultimate-guide.md:18891"
+  cost_levers_summary: "6 levers: monitoring, output compression, model routing, prompt caching, batch processing, semantic pre-indexing. Native CC vs API/SDK columns."
+  batch_api_cost_lever: "guide/core/architecture.md#message-batches-api"
+  batch_api_savings: "50% cheaper, async, 24h window, up to 100 requests per batch"
+  routellm_citation: "arXiv:2406.18665 (ICLR 2025) — 85% cost reduction on MT-Bench vs always-strong routing, 95% GPT-4 performance"
   rtk_upstream: "https://github.com/rtk-ai/rtk"
   rtk_website: "https://www.rtk-ai.app/"
   rtk_evaluation: "docs/resource-evaluations/rtk-evaluation.md"
@@ -859,7 +865,7 @@ deep_dive:
   gsd_note: "Overlap with existing patterns (Ralph Loop, Gas Town, BMAD)"
   # Resource Evaluations (added 2026-01-26, updated 2026-02-07)
   resource_evaluations_directory: "docs/resource-evaluations/"
-  resource_evaluations_count: 84
+  resource_evaluations_count: 86
   resource_evaluations_methodology: "docs/resource-evaluations/README.md"
   resource_evaluations_watchlist: "docs/resource-evaluations/watch-list.md"
   resource_evaluations_appendix: "guide/ultimate-guide.md:20886"
@@ -1648,6 +1654,15 @@ mcp:
     date: "2026-01-20"
     summary: "-55% tool calls, -97% tokens vs grep (Excalidraw 155k TS)"
     caveat: "Benchmark by tool maintainer, single-project validation"
+  # Semble — Ollama-free alternative to grepai (Added 2026-06-10)
+  semble_upstream: "https://github.com/MinishLab/semble"
+  semble_guide: "guide/ecosystem/mcp-servers-ecosystem.md"
+  semble_evaluation: "docs/resource-evaluations/semble-code-search.md"
+  semble_score: "3/5"
+  semble_purpose: "Semantic search across code + docs + config, CPU-only (Model2Vec + BM25 + RRF), native MCP server, no Ollama required"
+  semble_vs_grepai: "Semble: no external service, code+docs+config scope. Grepai: Ollama dep, code-only, adds call graph analysis."
+  semble_note: "Builds and caches a local index on first run. Community claim of index-free is incorrect."
+  semble_install: "pip install semble && semble mcp"
   serena_symbols: "Symbol-aware + session memory (~100ms)"
   astgrep_structural: "AST patterns for large refactoring (~200ms)"
   search_combined_workflow: "guide/workflows/search-tools-mastery.md:205"

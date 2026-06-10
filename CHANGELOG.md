@@ -18,6 +18,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Documentation
 
+- **Resource evaluations**: evaluated liza-mas token-saving CLI tools and Semble semantic search
+  - `liza-mas` roster (scip-search, mdtoc, functional-clusters, stacklit-cli): all score 1-2/5. scip-search (0 stars, day-one release), mdtoc (1 star, generic utility), and functional-clusters (0 stars, framework-internal) rejected. stacklit-cli (2 stars, Go variant of documented stacklit concept) added to watch-list with trigger condition 50+ stars.
+  - Semble (MinishLab/semble, ~5k stars, MIT): score 3/5. Integrated as Ollama-free alternative to grepai in `guide/ecosystem/mcp-servers-ecosystem.md` Code Search section. Corrects community claim of "index-free" (Semble builds and caches an index; the differentiator is no Ollama dependency, broader search scope code+docs+config).
+  - Eval files: `docs/resource-evaluations/liza-mas-token-saving-cli-tools.md`, `docs/resource-evaluations/semble-code-search.md`
+- **Cost Optimization Levers table** (`guide/ultimate-guide.md` §9.13): added a structured overview of the 6 cost levers (monitoring, output compression, model routing, prompt caching, batch processing, semantic pre-indexing) with Native vs. API/SDK columns and cross-links to existing documented sections. Includes RouteLLM citation (lm-sys, ICLR 2025, arXiv 2406.18665: 85% cost reduction on MT-Bench vs always-strong routing).
+- **Batch API discoverability** (`guide/ultimate-guide.md` §9.13): added cross-link to Message Batches API section in `core/architecture.md` (50% cheaper async processing), previously only reachable from an architecture deep-dive.
+- **machine-readable/reference.yaml**: added `semble_*` entries (upstream, guide, evaluation, purpose, vs_grepai note), `cost_levers_table` pointer (§9.13 new subsection), `batch_api_cost_lever`, `routellm_citation` (arXiv:2406.18665). Updated `updated` date to 2026-06-10, `resource_evaluations_count` to 86.
+
 - **Claude Code releases tracking**: updated from v2.1.168 to v2.1.170
   - v2.1.169 (2026-06-09): `--safe-mode` flag + `CLAUDE_CODE_SAFE_MODE`, `/cd` command, `disableBundledSkills` setting, enterprise MCP policy fix, macOS startup stall fix, 15+ bug fixes
   - v2.1.170 (2026-06-09): ⭐ Claude Fable 5 (Mythos-class model) access, VS Code terminal transcript fix

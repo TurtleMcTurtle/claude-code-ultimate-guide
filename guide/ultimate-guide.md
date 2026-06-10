@@ -18888,6 +18888,23 @@ The timeline matters: on May 6, Anthropic doubled interactive rate limits (annou
 
 For the majority of Claude Code users who use it interactively in the terminal, the impact is zero. For teams that have built significant automation on top of `claude -p` or the Agent SDK, this is a material change worth planning for before June 15.
 
+### Cost Optimization Levers: Native vs. API-Level
+
+Six levers control LLM costs. Some are directly accessible within Claude Code; others require building on the Anthropic API or SDK. The table maps each lever to what is already available and where to find it.
+
+| Lever | Native in Claude Code? | If building with the Anthropic API/SDK | Where documented |
+|-------|------------------------|----------------------------------------|------------------|
+| Cost monitoring | `/cost` command, `ccusage` CLI, subscription credit dashboard | Anthropic Console dashboard, per-call spend tracking | §9.13 above |
+| Output compression | Caveman skill (65-75% prose reduction), RTK for CLI output | Prompt engineering, streaming response handling | §9.13 Caveman + RTK |
+| Model routing | `/model opusplan`, `model:` agent frontmatter, `haiku` for mechanical tasks | RouteLLM (85% fewer calls to top-tier model on MT-Bench, arXiv 2406.18665) | [§2.5 Model Selection](#25-model-selection--thinking-guide) |
+| Prompt caching | Automatic for stable context prefixes (Anthropic caches repeated prefixes transparently) | `cache_control` breakpoints in API requests; up to 90% savings on repeated context | [§2.2 Token Management](#22-token-usage--context-management) |
+| Batch processing | Not available in interactive Claude Code sessions | Message Batches API: 50% cheaper, async, 24-hour window, up to 100 requests per batch | [core/architecture.md, Message Batches API](../core/architecture.md#message-batches-api) |
+| Semantic pre-indexing | grepai MCP, lean-ctx, stacklit | Semble (CPU-only, no Ollama required, native MCP server) | mcp-servers-ecosystem.md, context-engineering-tools.md |
+
+**On model routing via the API**: RouteLLM (lm-sys, ICLR 2025, arXiv 2406.18665) trains a lightweight router that decides per-call whether to invoke a strong model or a cheaper one. On MT-Bench it achieves 85% cost reduction vs always-strong routing while matching 95% of strong-model performance. The technique applies to automated pipelines built on the Anthropic API, not to interactive Claude Code sessions.
+
+**On batch processing**: The [Message Batches API](../core/architecture.md#message-batches-api) is the highest-leverage lever for automated pipelines (nightly classification, bulk document analysis, large-scale data extraction). Not applicable to interactive use. If you run `claude -p` in CI/CD at volume, evaluate the Batches API before the June 15 programmatic billing split, which separates interactive and programmatic usage costs.
+
 ---
 
 ## 9.14 Development Methodologies

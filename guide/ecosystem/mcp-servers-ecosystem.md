@@ -939,6 +939,7 @@ Result: Call graph showing 4 callers across 3 files
 | Server | Advantage | Disadvantage |
 |--------|-----------|--------------|
 | **Grepai** | Local, private, semantic + call graphs | Requires Ollama setup |
+| **Semble** | No Ollama required, code + docs + config scope | No call graph analysis |
 | Native Grep | Instant, exact patterns | No semantic understanding |
 | GitHub Code Search | Cloud-based, cross-repo | Requires GitHub, no call graphs |
 
@@ -948,6 +949,71 @@ Result: Call graph showing 4 callers across 3 files
 - **GitHub**: https://github.com/yoanbernabeu/grepai
 - **Ollama**: https://ollama.com
 - **Embedding Model**: nomic-embed-text (nomic-ai)
+
+---
+
+#### Semble
+
+**Community server** for semantic code search across code, documentation, and configuration files. Uses Model2Vec embeddings with BM25 ranking and RRF fusion, running CPU-only with no external service dependency.
+
+**Repository**: [MinishLab/semble](https://github.com/MinishLab/semble)
+**License**: MIT
+**Status**: Active (v0.3.3, June 2026), ~5,000 stars
+**Privacy**: Fully local (Model2Vec CPU-only), no data leaves your machine
+
+**Use Case**: Developer wants semantic code search without running Ollama locally. Semble builds a local index (Model2Vec + BM25 + RRF) on first run and caches it. Searches code, documentation, and configuration files by natural language query.
+
+**Key Features**:
+
+| Capability | Details |
+|------------|---------|
+| Semantic search | Natural language queries across code, docs, and config files |
+| MCP server | Native integration (`semble mcp`), no CLI wrapper needed |
+| No external service | Model2Vec runs CPU-only; no Ollama, no API key required |
+| Index | Built on first run, cached automatically (each new directory requires a build) |
+
+**Token Efficiency**:
+
+| Workflow | Tokens | Verdict |
+|----------|--------|---------|
+| Grep + Read files (brute force) | ~15K | Noisy, lots of irrelevant context |
+| Semble search (code + docs + config) | ~2-4K | Targeted results, broader scope than code-only |
+
+**Setup**:
+
+```bash
+pip install semble
+
+# Start the MCP server
+semble mcp
+```
+
+**Claude Code Configuration**:
+
+```bash
+claude mcp add semble -- semble mcp
+```
+
+**Comparison with Grepai**:
+
+| Aspect | Grepai | Semble |
+|--------|--------|--------|
+| External service | Yes (Ollama + nomic-embed-text) | No (CPU-only Model2Vec) |
+| MCP integration | CLI wraps to MCP | Native MCP server |
+| Search scope | Code only | Code + documentation + configuration |
+| Call graph analysis | Yes (trace_callers, trace_callees, trace_graph) | No |
+| Community traction | Active maintainer | ~5,000 GitHub stars |
+
+**When to choose Semble over Grepai**: You want semantic code search but do not run Ollama locally. Semble's broader scope also helps in monorepos where navigating configuration and documentation matters as much as navigating code. Choose Grepai when call graph analysis is essential; Semble does not offer this capability.
+
+> **Note on "index-free" claims**: Some community posts describe Semble as not requiring an index. This is incorrect. Semble builds a local index on first run and caches it. Each new directory requires a separate index build.
+
+**Quality Score**: **7.2/10** (scope: narrow evaluation, pending wider community signal)
+
+**Resources**:
+- **GitHub**: https://github.com/MinishLab/semble
+- **PyPI**: `pip install semble`
+- **Evaluation**: [docs/resource-evaluations/semble-code-search.md](../../docs/resource-evaluations/semble-code-search.md)
 
 ---
 
