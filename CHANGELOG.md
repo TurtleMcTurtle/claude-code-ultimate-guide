@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Security
+
+- **Threat database v2.21.0** (`examples/commands/resources/threat-db.yaml`): monthly update for June 2026.
+  - New campaign: **Miasma Worm** (TeamPCP, June 1-5, 2026): first self-propagating supply chain worm targeting AI coding agent config files. Compromised 32 npm packages under `@redhat-cloud-services` then propagated to 73 Microsoft Azure GitHub repositories. Attack vector: zero-width Unicode injection into `CLAUDE.md` and `.cursorrules`, invisible to human reviewers. Exfiltrates SSH keys, AWS credentials, GitHub tokens, cryptocurrency keystores to TeamPCP C2 infrastructure.
+  - New attack technique **T032** (Zero-Width Unicode Injection into AI Agent Config Files): hidden instructions using U+200B/200C/200D/FEFF characters in `CLAUDE.md`, `.cursorrules`, `AGENTS.md`. Includes detection commands and mitigation guidance.
+  - New IOCs: 4 TeamPCP/Miasma C2 IPs (`83.142.209.194`, `.11`, `.203`, `216.126.225.129:8443`) and domain `git-service.com` (registered 2026-05-16).
+  - New scanning tools: **NVIDIA SkillSpector** (open-source, 64 patterns across 16 categories, part of Verified Agent Skills framework, May 22, 2026) and **VIPER-MCP** (arXiv 2605.21392, academic framework, scanned 39,884 repos, found 106 zero-days, 67 CVEs assigned, May 30, 2026).
+  - New defensive resource: **vulnerablemcp.info** (community MCP vulnerability database, seeded from VIPER-MCP scan, June 2026).
+  - 6 new sources added (157 total). Total: 157 sources, 15 campaigns, 32 attack techniques, 37 scanning tools, 26 defensive resources, 10 C2 IPs, 4 malicious domains.
+
 ### Documentation
 
 - **Claude Code releases tracking**: updated from v2.1.168 to v2.1.170

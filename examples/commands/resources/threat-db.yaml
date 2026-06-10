@@ -2,8 +2,8 @@
 # For use with /security-check and /security-audit commands
 # Manually maintained — update after new security advisories
 
-version: "2.20.0"
-updated: "2026-06-04"
+version: "2.21.0"
+updated: "2026-06-10"
 sources:
   - name: "Snyk ToxicSkills"
     url: "https://snyk.io/blog/toxicskills-malicious-ai-agent-skills-clawhub/"
@@ -458,6 +458,24 @@ sources:
   - name: "Golf Scanner - Open-source MCP security discovery CLI (golf-mcp/golf-scanner)"
     url: "https://github.com/golf-mcp/golf-scanner"
     date: "2026-03"
+  - name: "StepSecurity - Miasma Worm Hits Microsoft GitHub Repositories"
+    url: "https://www.stepsecurity.io/blog/miasma-worm-hits-microsoft-github-repositories"
+    date: "2026-06-05"
+  - name: "THN - Self-Propagating Miasma Worm Hits 73 Microsoft GitHub Repositories"
+    url: "https://thehackernews.com/2026/06/miasma-worm-hits-73-microsoft-github.html"
+    date: "2026-06-05"
+  - name: "arXiv 2605.21392 - VIPER-MCP: Automated Vulnerability Detection in MCP Servers"
+    url: "https://arxiv.org/abs/2605.21392"
+    date: "2026-05-30"
+  - name: "Adversa AI - Top MCP security resources June 2026"
+    url: "https://adversa.ai/blog/top-mcp-security-resources-june-2026/"
+    date: "2026-06"
+  - name: "vulnerablemcp.info - The Vulnerable MCP Project (community security database)"
+    url: "https://vulnerablemcp.info"
+    date: "2026-06"
+  - name: "NVIDIA Developer Blog - SkillSpector: Open-Source AI Agent Security Scanner"
+    url: "https://developer.nvidia.com/blog/skillspector-open-source-ai-agent-skill-security-scanner/"
+    date: "2026-05-22"
 
 # ═══════════════════════════════════════════════════════════════
 # MALICIOUS AUTHORS (confirmed by security researchers)
@@ -1935,6 +1953,19 @@ iocs:
     - ip: "45.115.38.27"
       campaign: "PyPI MCP reverse shell (JFrog)"
       notes: "Reverse shell on port 4433"
+    - ip: "83.142.209.194"
+      campaign: "TeamPCP / Miasma Worm"
+      notes: "TeamPCP primary C2; shared across TanStack, Mistral AI, @antv, and Miasma campaigns; block all outbound to 83.142.209.0/24"
+    - ip: "83.142.209.11"
+      campaign: "TeamPCP / Miasma Worm"
+      notes: "TeamPCP secondary C2; same /24 subnet as .194 and .203"
+    - ip: "83.142.209.203"
+      campaign: "TeamPCP / Miasma Worm"
+      notes: "TeamPCP tertiary C2; same /24 subnet as .194 and .11"
+    - ip: "216.126.225.129"
+      port: 8443
+      campaign: "TeamPCP / Megalodon / Miasma Worm"
+      notes: "Megalodon C2 endpoint used in June 2026 Miasma campaign; exfiltrates SSH keys, AWS credentials, GitHub tokens, and crypto keystores over TLS on port 8443"
 
   # Exfiltration endpoints
   exfil_urls:
@@ -1957,6 +1988,10 @@ iocs:
       campaign: "Fake CLI Prerequisites"
       date: "2026-02"
       notes: "Attacker-controlled URL referenced in malicious SKILL.md files as fake OpenClawCLI installer prerequisites; Trend Micro identified 39+ skills abusing this"
+    - domain: "git-service.com"
+      campaign: "TeamPCP / Miasma Worm"
+      date: "2026-05-16"
+      notes: "TeamPCP C2 domain registered 2026-05-16; used as exfiltration endpoint in Miasma Worm campaign targeting @redhat-cloud-services npm packages and Microsoft Azure GitHub repos; block all outbound DNS + HTTP/S"
 
   # Malicious GitHub repos
   github_repos:
@@ -2361,6 +2396,43 @@ campaigns:
       - "https://thehackernews.com/2026/02/clawjacked-flaw-lets-malicious-sites.html"
       - "https://www.oasis.security/blog/openclaw-vulnerability"
 
+  - name: "Miasma Worm (TeamPCP)"
+    source: "StepSecurity / The Hacker News / SafeDep (2026-06-05)"
+    date: "2026-06-05"
+    threat_actor: "TeamPCP"
+    platform: "npm / GitHub"
+    attack_type: "Self-propagating supply chain worm"
+    phases:
+      - phase: "Phase 1 (June 1-3, 2026)"
+        target: "32 npm packages under @redhat-cloud-services namespace"
+        method: "Typosquatted and hijacked packages injecting zero-width Unicode instructions into CLAUDE.md and .cursorrules"
+      - phase: "Phase 2 (June 3-5, 2026)"
+        target: "73 Microsoft Azure GitHub repositories disabled"
+        method: "Worm self-propagates to repos where compromised packages were used; modifies CLAUDE.md via GitHub Actions"
+    technique: "First confirmed self-replicating supply chain worm targeting AI coding agent configuration files. Injects hidden instructions using zero-width Unicode characters (U+200B, U+200C, U+FEFF) into CLAUDE.md and .cursorrules files — invisible to human code reviewers but executed by AI agents on next session load. Captures SSH keys, AWS credentials, GitHub tokens, and cryptocurrency keystores then exfiltrates to TeamPCP C2 infrastructure (83.142.209.0/24, Megalodon C2 at 216.126.225.129:8443)."
+    c2:
+      - "83.142.209.194 (TeamPCP primary C2)"
+      - "83.142.209.11 (TeamPCP secondary C2)"
+      - "83.142.209.203 (TeamPCP tertiary C2)"
+      - "216.126.225.129:8443 (Megalodon C2)"
+      - "git-service.com (C2 domain, registered 2026-05-16)"
+    exfiltration:
+      - "SSH private keys (~/.ssh/)"
+      - "AWS credentials (~/.aws/credentials)"
+      - "GitHub personal access tokens"
+      - "Cryptocurrency wallet keystores"
+    iocs:
+      - "git-service.com (TeamPCP C2, registered 2026-05-16)"
+      - "83.142.209.0/24 (TeamPCP C2 subnet)"
+    attribution:
+      group: "TeamPCP"
+      linked_campaigns: ["TanStack npm Compromise (2025)", "Mistral AI npm Supply Chain", "@antv Typosquatting", "PyTorch Lightning", "Bitwarden CLI", "Intercom MCP"]
+      tactics: "TeamPCP reuses 83.142.209.0/24 C2 infrastructure across all campaigns since 2025"
+    notes: "Miasma is the first documented worm capable of propagating across organizations via shared npm dependencies. The combination of zero-width Unicode injection and AI agent auto-execution of config files creates a class of attacks with no prior analog in traditional supply chain security. Defenders must audit CLAUDE.md, AGENTS.md, and .cursorrules for invisible Unicode characters using tools like: `cat -A .claude/CLAUDE.md | grep -P '\\x00-\\x08|\\x0b|\\x0c|\\x0e-\\x1f|\\x80-\\x9f'`"
+    sources:
+      - "https://www.stepsecurity.io/blog/miasma-worm-hits-microsoft-github-repositories"
+      - "https://thehackernews.com/2026/06/miasma-worm-hits-73-microsoft-github.html"
+
 # ═══════════════════════════════════════════════════════════════
 # ATTACK TECHNIQUES TAXONOMY
 # Maps to SAFE-MCP framework and common patterns
@@ -2691,6 +2763,21 @@ attack_techniques:
     source: "Adversa AI (2026-05-08)"
     mitigation: "Anthropic declined to fix (considers folder trust consent sufficient) — apply defense-in-depth: review .claude/settings.json, .mcp.json, and .cursor/mcp.json before accepting folder trust on any cloned repo; never press Enter on the folder trust dialog without first inspecting all AI agent config files in the repository root; disable auto-approve / YOLO mode globally; run unknown repos in isolated containers or VMs; use file integrity monitoring on AI agent config locations"
     notes: "Adversa confirmed vulnerable: Claude Code, Gemini CLI, Cursor CLI, Copilot CLI — shared convention across all agentic CLIs allows malicious repos to auto-approve servers; Anthropic's position is that trusting the folder is explicit consent — developers must understand the full implications of folder trust before accepting"
+
+  - id: "T032"
+    name: "Zero-Width Unicode Injection into AI Agent Config Files"
+    description: "Attacker embeds hidden instructions in AI coding agent configuration files (CLAUDE.md, .cursorrules, AGENTS.md, MEMORY.md) using zero-width Unicode characters (U+200B Zero Width Space, U+200C Zero Width Non-Joiner, U+200D Zero Width Joiner, U+FEFF BOM/Zero Width No-Break Space). These characters render as completely invisible in standard text editors, code review tools, and GitHub diffs, but are faithfully read and executed by AI agents when they load the config file. First documented at scale in the Miasma Worm (June 2026), which used this technique to persist malicious instructions across supply chain compromise of npm packages and GitHub repositories."
+    examples:
+      - "Miasma Worm: infected npm packages inject zero-width Unicode sequences into CLAUDE.md during npm install post-install hooks; instructions exfiltrate SSH keys and AWS credentials on next Claude Code session"
+      - "Supply chain compromise writes .cursorrules with visible benign rules followed by hidden zero-width Unicode instructions to bypass code review"
+      - "GitHub PR introduces invisible instructions into AGENTS.md that survive code review and merge to production branches"
+      - "Malicious transitive dependency appends hidden exfiltration instructions to CLAUDE.md using zero-width characters"
+    affected_platforms: ["Claude Code", "Cursor", "Windsurf", "GitHub Copilot", "any AI agent that loads CLAUDE.md, .cursorrules, or AGENTS.md"]
+    campaigns: ["Miasma Worm (TeamPCP, 2026-06)"]
+    source: "StepSecurity / THN (2026-06-05)"
+    detection: "Scan config files for zero-width Unicode using: grep -P '[\\x{200B}\\x{200C}\\x{200D}\\x{FEFF}\\x{00AD}\\x{00A0}]' CLAUDE.md .cursorrules AGENTS.md — or: cat -v CLAUDE.md | grep -v '^[[:print:][:space:]]*$'"
+    mitigation: "Audit all AI agent config files for zero-width Unicode after dependency installs or repo clones; add pre-commit hooks that reject config file changes containing zero-width Unicode; use file integrity monitoring on CLAUDE.md, .cursorrules, and AGENTS.md; run 'cat -A CLAUDE.md' to reveal hidden characters before trusting config files; consider CLAUDE.md hashing and re-verification at session start"
+    notes: "Particularly insidious because (1) standard diff tools and GitHub PR review render these characters as nothing, making supply chain injection invisible to reviewers, (2) the attacker needs only write access to a dependency's post-install script or GitHub Actions workflow, (3) AI agents process all Unicode in config files faithfully — there is no built-in filtering of invisible characters"
 
 # ═══════════════════════════════════════════════════════════════
 # SCANNING TOOLS
@@ -3207,6 +3294,42 @@ scanning_tools:
       - "Focused on general vulnerability discovery, not MCP/skill-specific scanning"
     notes: "Announced May 12, 2026; extended to Defender preview June 2026; demonstrates agentic AI applied to the vulnerability discovery problem itself"
 
+  - name: "NVIDIA SkillSpector"
+    vendor: "NVIDIA"
+    type: "cli"
+    url: "https://github.com/NVIDIA/SkillSpector"
+    date_added: "2026-05-22"
+    capabilities:
+      - "64 vulnerability detection patterns across 16 risk categories"
+      - "Categories include MCP least privilege, MCP tool poisoning, credential leakage, command injection, path traversal"
+      - "Part of NVIDIA Verified Agent Skills (VAS) framework — assigns trust scores to skills"
+      - "Static analysis of SKILL.md, skill code, and MCP configurations"
+      - "Open-source, offline, no external API dependencies"
+      - "Detects T001 (Tool Poisoning), T008 (Credential Theft), T011 (MCP Tool Poisoning) patterns"
+    limitations:
+      - "Static analysis only — cannot detect runtime-only or obfuscated payloads that fetch from external sources"
+      - "Zero-width Unicode injection (T032) not yet in initial release patterns"
+      - "Requires manual runs — no CI/CD integration in initial release"
+    notes: "Released May 22, 2026 as part of NVIDIA's Verified Agent Skills initiative for AI agent security assurance. Complements mcp-scan with NVIDIA-developed detection patterns across the full MCP tool poisoning surface. First open-source skill scanner to explicitly target MCP least-privilege violations as a distinct vulnerability category."
+
+  - name: "VIPER-MCP"
+    vendor: "Academic (arXiv 2605.21392)"
+    type: "research-framework"
+    url: "https://arxiv.org/abs/2605.21392"
+    date_added: "2026-05-30"
+    capabilities:
+      - "Automated static analysis + dynamic sandboxed execution for MCP server vulnerability detection"
+      - "Scanned 39,884 public MCP server repositories"
+      - "Found 106 zero-day vulnerabilities, resulting in 67 CVE assignments"
+      - "Detects: command injection, path traversal, SSRF, auth bypass, DNS rebinding, and tool poisoning"
+      - "4.6% false positive rate and 7.7% false negative rate (empirically measured)"
+      - "Combines static AST analysis with runtime behavioral analysis in sandboxed environment"
+    limitations:
+      - "Academic research framework — not available as production CLI tool yet"
+      - "Requires container sandbox infrastructure for dynamic analysis"
+      - "67 CVEs from single scan batch — ongoing maintenance unclear"
+    notes: "Published May 30, 2026 (arXiv 2605.21392). Most comprehensive automated MCP security audit to date. The 67 CVEs filed from one scan run represents the largest single batch of MCP CVE submissions. Framework methodology is replicable and has been cited by NVIDIA SkillSpector and vulnerablemcp.info teams."
+
 # ═══════════════════════════════════════════════════════════════
 # DEFENSIVE FRAMEWORKS & BLOCKLISTS
 # ═══════════════════════════════════════════════════════════════
@@ -3358,3 +3481,8 @@ defensive_resources:
     url: "https://www.microsoft.com/en-us/security/blog/2026/06/02/microsoft-build-2026-securing-code-agents-and-models-across-the-development-lifecycle/"
     type: "tool"
     description: "Microsoft Build 2026 (June 2026) introduced the Microsoft Execution Containers (MXC) SDK — a cross-platform, policy-driven execution layer for AI agents on Windows and WSL. Developers declare what to constrain (file access, network, process execution) and Windows enforces those constraints at runtime. Also announced: Microsoft Defender asset context mapping for agents (inventories MCP servers, associated identities, and reachable cloud resources per agent), policy-based runtime blocking when agents exhibit malicious patterns, and shadow AI discovery covering 18 agent types including Claude Code and GitHub Copilot CLI. MXC SDK is in early preview. Agent 365 with policy controls entered public preview June 2026."
+
+  - name: "vulnerablemcp.info - The Vulnerable MCP Project"
+    url: "https://vulnerablemcp.info"
+    type: "threat-intel"
+    description: "Community-maintained database of known vulnerable MCP servers, aggregating CVEs, exploits, and mitigation guidance in one place. Parallel to NVD but MCP-specific: tracks affected components, CVSS scores, fix availability, and links to vendor advisories. Particularly useful for quick version-gate lookups before adding a new MCP server to a project. Launched June 2026; seeded with data from the VIPER-MCP scan of 39,884 repos (arXiv 2605.21392) and ongoing CVE feeds."
