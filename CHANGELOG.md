@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **Section 9.26 Review-Driven Context Optimization** (`guide/ultimate-guide.md`): new advanced pattern covering how to convert structured inline review feedback (via tools like [crit](https://github.com/tomasz-tomczyk/crit)) into CLAUDE.md rules. Covers the round-to-round diff as a verification mechanism, pattern extraction from review comment threads, promotion criteria, and the compounding effect over multiple sessions. Cross-referenced with §9.24 (Instinct-Based Learning) and §9.23 (Update Loop). Added to chapter 9 quick jump and ToC.
+- **Resource evaluation: crit** (`docs/resource-evaluations/crit-human-in-loop-review.md`): score 4/5, decision: integrate. Tool by tomasz-tomczyk for human-in-the-loop review with round-to-round diffing, inline plan review before execution, DOM-anchored web app comments, and native Claude Code integration.
+
 ### Updated
 
 - Promoted Opus 4.8 (`claude-opus-4-8`) to current/recommended/default Opus across guide, whitepapers, recap cards, machine-readable files, and landing data; demoted Opus 4.6 and 4.7 to previous generation.

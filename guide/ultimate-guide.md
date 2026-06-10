@@ -221,6 +221,7 @@ If you only have time for 5 sections:
   - [9.23 Configuration Lifecycle & The Update Loop](#923-configuration-lifecycle--the-update-loop)
   - [9.24 Instinct-Based Continuous Learning](#924-instinct-based-continuous-learning)
   - [9.25 Harness Engineering](#925-harness-engineering)
+  - [9.26 Review-Driven Context Optimization](#926-review-driven-context-optimization)
 - [10. Reference](#10-reference) `🟢 All levels` `⏱ As needed`
   - [10.1 Commands Table](#101-commands-table)
   - [10.2 Keyboard Shortcuts](#102-keyboard-shortcuts)
@@ -14641,7 +14642,7 @@ claude
 
 # 9. Advanced Patterns
 
-_Quick jump:_ [The Trinity](#91-the-trinity) · [Composition Patterns](#92-composition-patterns) · [CI/CD Integration](#93-cicd-integration) · [IDE Integration](#94-ide-integration) · [Tight Feedback Loops](#95-tight-feedback-loops)
+_Quick jump:_ [The Trinity](#91-the-trinity) · [Composition Patterns](#92-composition-patterns) · [CI/CD Integration](#93-cicd-integration) · [IDE Integration](#94-ide-integration) · [Tight Feedback Loops](#95-tight-feedback-loops) · [Review-Driven Context Optimization](#926-review-driven-context-optimization)
 
 ---
 
@@ -23879,6 +23880,121 @@ This philosophy only applies when throughput is genuinely high. At normal develo
 > **Sources**: Session lifecycle, Verification Gap, WIP=1, feature_list.json, init.sh, and progress.md patterns from [Learn Harness Engineering](https://github.com/humanlayer/learn-harness-engineering) (HumanLayer, 2026). AGENTS.md-as-TOC, knowledge boundary principle, exec plans, docs/ structure, ephemeral observability stack, taste invariants, doc-gardening agent, anti-entropy model, layered domain architecture, and high-throughput merge philosophy from "Harness engineering: exploiting Codex in the agent era," Ryan Lopopolo, OpenAI Engineering blog, Feb 11, 2026 (https://openai.com/index/harness-engineering/).
 
 > **See also**: [§3.1 CLAUDE.md](#31-memory-files-claudemd) — instruction files, the Instructions subsystem. [§9.5 Tight Feedback Loops](#95-tight-feedback-loops) — automated feedback, the Feedback subsystem. [§9.24 Instinct-Based Continuous Learning](#924-instinct-based-continuous-learning) — capturing session observations across sessions.
+
+---
+
+## 9.26 Review-Driven Context Optimization
+
+**Reading time**: 7 minutes
+**Skill level**: Month 2+
+
+> **Relationship to §9.24**: Instinct-based learning captures observations passively from session logs. Review-driven optimization captures structured human corrections actively (what you explicitly marked wrong during a review cycle). Both feed the same destination (CLAUDE.md and `.claude/rules/`), from different signal sources.
+
+### The Problem with End-of-Session Reflections
+
+When you finish a Claude Code session and ask "what should I add to CLAUDE.md?", you're working from memory. You remember the frustrating moments, but you lose the specifics: which file, which line, what the agent produced versus what you wanted. The gap between observation and encoded rule stays wide.
+
+Review-driven optimization changes the capture point. Instead of extracting lessons at session end, you extract them from the structured feedback you left *during* the review: inline comments attached to specific lines, on specific files, at specific points in the agent's output. The signal is richer and already scoped to a location.
+
+### The Feedback Loop
+
+```
+Claude Code produces output (round 1)
+        ↓
+Human reviews inline with crit
+  → leaves comments on specific lines
+        ↓
+Claude Code iterates (round 2)
+        ↓
+crit shows round-to-round diff
+  → what changed, what was addressed, what wasn't
+        ↓
+Extract comment patterns across sessions
+        ↓
+Convert recurring patterns into CLAUDE.md rules
+```
+
+The round-to-round diff (delta between agent iterations, not between commits) is the verification step: it tells you whether the agent actually applied your correction, or just acknowledged it. If round 2 still contains the same issue you flagged in round 1, that is a strong signal the rule needs to be explicit in CLAUDE.md, since the agent can't infer it from context alone.
+
+### crit as the Capture Layer
+
+[crit](https://github.com/tomasz-tomczyk/crit) is a local review interface built for this loop. It provides inline commenting on git diffs, markdown/plan files, and live web apps, with native Claude Code integration:
+
+```bash
+brew install crit
+crit install claude-code   # writes config snippets for the project
+```
+
+Basic review flow:
+
+```bash
+# After Claude Code produces a diff or plan:
+crit                        # auto-detects uncommitted changes
+crit plan.md                # review a plan before Claude executes it
+
+# After Claude iterates (round 2):
+crit                        # shows round-to-round diff alongside your comments
+```
+
+The programmatic comment API lets you annotate from the CLI, useful when scripting the extraction step:
+
+```bash
+crit comment src/file.go:42 "wrong approach, see rule X"
+```
+
+### Extracting Patterns from Review Comments
+
+After a review session, dump the accumulated comments and look for recurrence across files and sessions:
+
+```bash
+# Extract rule candidates from recent crit threads
+cat .crit/threads/*.json | claude --print "
+Analyze these review comments.
+Identify patterns that recur across multiple locations or sessions.
+For each pattern, draft a one-line rule for CLAUDE.md that would prevent the issue.
+Format:
+- pattern: <what kept appearing>
+  rule: <the CLAUDE.md rule that prevents it>
+  confidence: <low|medium|high>
+Only include patterns with 2+ occurrences. Skip one-off corrections."
+```
+
+The confidence field matters. A pattern that appeared twice across two sessions might be coincidence; one that appeared five times across different files and different days is a systematic gap in your context.
+
+### What Gets Promoted vs. What Gets Discarded
+
+The extraction produces candidates. The promotion stays manual:
+
+| Pattern type | Action |
+|---|---|
+| Recurs 4+ times, same type of mistake | Promote to CLAUDE.md rule immediately |
+| Recurs 2-3 times, related to a specific file type | Add to `.claude/rules/` scoped rule |
+| Appeared once, highly specific | Discard: one-off correction, not a pattern |
+| Appeared once, high cost if repeated | Add to `.claude/rules/` with a note |
+
+The rule should encode the *constraint*, not the *correction*. "Don't use em dashes in prose files" is a good rule. "Fix the em dash on line 47 of guide.md" is not.
+
+### The Round-to-Round Diff as Verification
+
+The diff between rounds 1 and 2 answers a different question than the comments themselves. Comments tell you what was wrong. The diff tells you whether the agent understood the correction and applied it correctly.
+
+If you flagged an issue in round 1 and the diff shows it was addressed, that correction may not need a rule: the agent understood and adapted. If you flagged the same issue and the diff shows no change (or a partial change), that pattern belongs in CLAUDE.md. The agent cannot reliably infer it from prompt context alone.
+
+This is the verification step that distinguishes review-driven optimization from pure instinct capture. You're not just observing, you're testing whether an explicit instruction was sufficient, and encoding it as a permanent rule when it wasn't.
+
+### Practical Setup
+
+1. Install crit: `brew install crit && crit install claude-code`
+2. Run a review cycle after any multi-iteration Claude Code session
+3. After 3-5 sessions, dump comment threads and run the extraction prompt above
+4. Promote 0-2 rules per week to CLAUDE.md or `.claude/rules/`
+5. Discard the rest: candidate rules that didn't reach threshold have already served their purpose
+
+**The compounding effect**: each rule added from review feedback removes a class of corrections from future sessions. After a few months, the review comments shift from "you did X wrong" to "this is a design question," which signals that the mechanical patterns are covered and the remaining gaps require judgment.
+
+> **Tool**: [crit by tomasz-tomczyk](https://github.com/tomasz-tomczyk/crit), MIT, active maintenance, native `crit install claude-code` support.
+
+> **See also**: [§9.24 Instinct-Based Continuous Learning](#924-instinct-based-continuous-learning) for passive capture from session logs. [§9.23 Configuration Lifecycle & The Update Loop](#923-configuration-lifecycle--the-update-loop) for deliberate CLAUDE.md maintenance. [§3.1 CLAUDE.md](#31-memory-files-claudemd) for where the extracted rules land.
 
 ---
 
