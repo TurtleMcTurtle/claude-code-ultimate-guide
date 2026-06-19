@@ -709,7 +709,7 @@ claude plugin install session-summary      # Session analytics dashboard (15 sec
 
 ### Security Hooks
 
-**37 production hooks** (bash + PowerShell) in [`examples/hooks/`](./examples/hooks/):
+**38 production hooks** (bash + PowerShell) in [`examples/hooks/`](./examples/hooks/):
 
 | Hook | Purpose |
 |------|---------|
@@ -801,7 +801,7 @@ Use this guide critically. Experiment. Share what works for you.
 
 **Skills** (74): [/pr](./examples/skills/pr/SKILL.md), [/commit](./examples/skills/commit/SKILL.md), [/release-notes](./examples/skills/release-notes/SKILL.md), [/diagnose](./examples/skills/diagnose/SKILL.md), [/security](./examples/skills/security/SKILL.md), [/security-check](./examples/skills/security-check/SKILL.md) **, [/security-audit](./examples/skills/security-audit/SKILL.md) **, [/update-threat-db](./examples/skills/update-threat-db/SKILL.md) **, [/refactor](./examples/skills/refactor/SKILL.md), [/explain](./examples/skills/explain/SKILL.md), [/optimize](./examples/skills/optimize/SKILL.md), [/ship](./examples/skills/ship/SKILL.md)...
 
-**Security Hooks** (37): [dangerous-actions-blocker](./examples/hooks/bash/dangerous-actions-blocker.sh), [prompt-injection-detector](./examples/hooks/bash/prompt-injection-detector.sh), [unicode-injection-scanner](./examples/hooks/bash/unicode-injection-scanner.sh), [output-secrets-scanner](./examples/hooks/bash/output-secrets-scanner.sh)...
+**Security Hooks** (38): [dangerous-actions-blocker](./examples/hooks/bash/dangerous-actions-blocker.sh), [prompt-injection-detector](./examples/hooks/bash/prompt-injection-detector.sh), [unicode-injection-scanner](./examples/hooks/bash/unicode-injection-scanner.sh), [output-secrets-scanner](./examples/hooks/bash/output-secrets-scanner.sh)...
 
 **Skills** (64): [Claudeception](https://github.com/blader/Claudeception) — Meta-skill that auto-generates skills from session discoveries ⭐
 

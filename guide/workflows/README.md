@@ -83,6 +83,19 @@ Eliminates merge conflicts on `CHANGELOG.md`, captures context at implementation
 - Conditional suggestion pattern: "if PR-intent without fragment-mention"
 - CI enforcement with independent migration check job
 
+### [Smart-Suggest Routing](./smart-suggest-routing.md) ⭐ NEW
+
+**Two-engine `UserPromptSubmit` hook system: regex enforcement + self-calibrating BM25 lexical scoring**
+
+Injects ranked skill suggestions as `additionalContext` so Claude proposes the right skill even when phrasing was never anticipated. BM25 generalizes from scenario examples; the regex layer handles enforcement patterns. Both run in parallel on every prompt.
+
+**Key Topics**:
+- Regex vs BM25 decision table (when each engine wins)
+- Corpus format: 10+ positive + 3+ negative scenarios per skill
+- `build-index.js`: leave-one-out calibration, F-beta threshold, `ok`/`excluded`/`conflict` status
+- Wiring two hooks in parallel via settings.json
+- Detached background index rebuild when corpus changes
+
 ### [RPI: Research → Plan → Implement](./rpi.md) ⭐ NEW
 
 **3-phase feature development with explicit validation gates between phases**
@@ -217,6 +230,7 @@ Multi-session task tracking with TodoWrite, tasks API, and context persistence a
 | **New project from template** | [Skeleton Projects](./skeleton-projects.md) |
 | **Team AI instructions** | [Team AI Instructions](./team-ai-instructions.md) |
 | **Enforce mandatory workflow steps** | [Changelog Fragments](./changelog-fragments.md) |
+| **Skill routing from natural-language prompts** | [Smart-Suggest Routing](./smart-suggest-routing.md) |
 | **Unknown feasibility, multi-day feature** | [RPI: Research → Plan → Implement](./rpi.md) |
 | **Documentation** | [PDF Generation](./pdf-generation.md) |
 | **Social previews** | [OG Image Generation](./og-image-generation.md) |

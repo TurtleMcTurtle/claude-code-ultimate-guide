@@ -21025,7 +21025,157 @@ Ces URLs sont la source officielle à consulter en priorité quand un claim sur 
 
 ---
 
-### 9.18.5 Token-Efficient Codebase
+### 9.18.5 Open Knowledge Format (OKF)
+
+**Problem**: Internal knowledge lives in catalog APIs, wikis, code comments, and the heads of senior engineers. Every agent builder reassembles the same context from scratch. A new agent onboarding to your codebase learns what `weekly_active_users` means by asking someone, not by reading a file.
+
+**Solution**: OKF (Open Knowledge Format) is a vendor-neutral spec that turns your internal knowledge into a directory of markdown files with YAML frontmatter. Agents read it directly; humans author it in any editor; git versions it like code.
+
+#### Origin: The Karpathy LLM Wiki Pattern
+
+In April 2026, Andrej Karpathy published a GitHub gist describing a pattern he had been using: a structured markdown wiki giving LLMs reliable internal context. The post drew 16M+ views on X and the gist accumulated 5,000+ stars within days. Community implementations proliferated immediately under names like `AGENTS.md`, Obsidian-to-agent pipelines, and repos full of `index.md` files an agent reads before it does real work.
+
+Google Cloud formalized the pattern into OKF v0.1 on June 12, 2026. The spec is minimal by design: it standardizes the structural conventions needed to make a knowledge corpus self-describing, and nothing more.
+
+**Repository**: https://github.com/GoogleCloudPlatform/knowledge-catalog/tree/main/okf
+
+#### What an OKF Bundle Looks Like
+
+A bundle is a directory of markdown files. Each concept is one file; the file path is its identity. The directory becomes a graph when files link to each other.
+
+```
+sales/
+├── index.md                      # optional directory listing
+├── log.md                        # optional chronological history
+├── tables/
+│   ├── orders.md
+│   └── customers.md
+└── metrics/
+    └── weekly_active_users.md
+```
+
+A concept document has two parts: YAML frontmatter (structured, queryable) and a markdown body (prose, schema, examples):
+
+```yaml
+---
+type: database-table
+title: orders
+description: One row per completed customer order. Source of truth for revenue.
+tags: [revenue, core]
+timestamp: 2026-05-28T14:30:00Z
+---
+
+# Schema
+| Column | Type | Description |
+|--------|------|-------------|
+| `order_id` | UUID | Primary key |
+| `user_id` | UUID | FK to [customers](/tables/customers.md) |
+| `amount_cents` | INT | Order total in cents |
+| `status` | ENUM | pending, completed, refunded |
+
+# Business Rules
+Revenue is recognized when `status = completed`. Never sum `amount_cents` across `refunded` rows.
+
+# Joins
+Standard join path: `orders LEFT JOIN customers ON orders.user_id = customers.id`
+```
+
+Cross-links between files create graph edges. Consumers treat them as untyped directed edges and must tolerate broken links gracefully.
+
+#### The Spec (v0.1)
+
+**Conformance requires**:
+- Every non-reserved `.md` file contains parseable YAML frontmatter
+- Every frontmatter block has a non-empty `type` field
+
+**Recommended fields**: `title`, `description`, `resource`, `tags`, `timestamp`
+
+**Reserved filenames**: `index.md` (directory listing with bullet entries), `log.md` (update history, newest first)
+
+**Distribution**: git repository (recommended), tarball, or a subdirectory within a larger repo
+
+**Permissive consumption**: consumers must tolerate missing optional fields, unknown types, extra keys, and broken links. This is intentional. The format is designed to grow.
+
+#### How OKF Relates to Existing Patterns
+
+OKF does not replace the formats you already use. It fills a different slot in the knowledge stack:
+
+| Format | Scope | Purpose |
+|--------|-------|---------|
+| **CLAUDE.md** | Session | Active instructions for this agent, this session |
+| **AGENTS.md** | Behavior | Rules on what agents should and should not do |
+| **llms.txt** | Discovery | Where to find documentation in this project |
+| **OKF bundle** | Knowledge corpus | What the organization knows: schemas, metrics, runbooks, join paths |
+
+`llms.txt` tells an agent where to find docs. OKF tells it what `weekly_active_users` actually means at your company, why the `orders` table has a `status` field with four states, and which join path is correct. Different problem, different layer.
+
+**Pattern**: reference your bundle from CLAUDE.md so agents know it exists:
+
+```markdown
+## Domain Knowledge
+
+Internal knowledge bundle: `knowledge/`
+- Type `database-table` → table schemas with business rules
+- Type `metric` → business metric definitions and ownership
+- Type `runbook` → incident response procedures
+```
+
+#### Adoption Status (June 2026)
+
+v0.1 is an invitation, not yet a standard. At launch, every producer and consumer was built by Google. Google Cloud's own Knowledge Catalog already ingests OKF and serves it to agents. The vendors to watch for external adoption: Atlan, Alation, Collibra, Unity Catalog.
+
+The adoption risk for you is near zero: OKF bundles are plain markdown files in a directory. If the spec never gains traction, the files remain readable by humans and agents regardless.
+
+#### When to Use OKF
+
+**Good fit when**:
+- Agents relearn the same internal facts every session (table schemas, metric definitions, join paths)
+- Multiple agents or tools need the same context and you want one source of truth
+- The knowledge is too structured for CLAUDE.md and too large to inline
+- You want knowledge curation to work like code review: pull requests, diffs, blame
+
+**Stick with llms.txt when** you only need a documentation discovery index pointing at existing files.
+
+**Stick with CLAUDE.md when** the context is session-specific instructions rather than reusable knowledge.
+
+#### Quick Start
+
+```bash
+# Minimal OKF bundle for a project with a few key tables
+mkdir knowledge && cd knowledge
+mkdir -p tables metrics
+
+# Create your first concept document
+cat > tables/users.md << 'EOF'
+---
+type: database-table
+title: users
+description: All registered accounts. Soft-delete only—never hard delete.
+tags: [core, auth]
+---
+
+# Schema
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `email` | TEXT | Unique, used for login |
+| `deleted_at` | TIMESTAMP | NULL if active |
+
+# Business Rules
+Filter `WHERE deleted_at IS NULL` in every query unless explicitly auditing deletions.
+EOF
+
+# Reference from CLAUDE.md
+echo -e '\n## Domain Knowledge\nSee knowledge/ for table schemas and metric definitions.' >> ../CLAUDE.md
+```
+
+From there, agents loading `knowledge/tables/users.md` into context get the business rule about soft deletes without asking anyone.
+
+**Reference implementation and sample bundles**: https://github.com/GoogleCloudPlatform/knowledge-catalog
+
+---
+
+### 9.18.6 Token-Efficient Codebase
 
 **Problem**: Agents have token limits. Large files consume context budget quickly, forcing agents to read in chunks and lose coherence.
 
@@ -21197,7 +21347,7 @@ Configure logger in CLAUDE.md:
 
 ---
 
-### 9.18.6 Testing for Autonomy
+### 9.18.7 Testing for Autonomy
 
 **Problem**: Agents follow tests more reliably than documentation. Incomplete tests lead to incorrect implementations.
 
@@ -21428,7 +21578,7 @@ CI will reject PRs below 80% coverage.
 
 ---
 
-### 9.18.7 Conventions & Patterns
+### 9.18.8 Conventions & Patterns
 
 **Problem**: Agents hallucinate less when using familiar patterns from their training data.
 
@@ -21663,7 +21813,7 @@ class UserController {
 
 ---
 
-### 9.18.8 Guardrails & Validation
+### 9.18.9 Guardrails & Validation
 
 **Problem**: Agents make mistakes—hallucinations, incorrect assumptions, security oversights.
 
@@ -21845,7 +21995,7 @@ jobs:
 
 ---
 
-### 9.18.9 Serendipity & Cross-References
+### 9.18.10 Serendipity & Cross-References
 
 **Problem**: Agents work on isolated files and miss related code elsewhere in the codebase.
 
@@ -22023,7 +22173,7 @@ See TROUBLESHOOTING.md for full error catalog + solutions.
 
 ---
 
-### 9.18.10 Usage Instructions
+### 9.18.11 Usage Instructions
 
 **Problem**: Agents guess API usage patterns and often guess wrong (argument order, error handling, return types).
 
@@ -22236,7 +22386,7 @@ class GoogleCalendarClient {
 
 ---
 
-### 9.18.11 Decision Matrix & Implementation Checklist
+### 9.18.12 Decision Matrix & Implementation Checklist
 
 #### When to Optimize for Agents vs Humans
 

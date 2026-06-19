@@ -12,6 +12,8 @@ Hooks are scripts that execute automatically on Claude Code events. They enable 
 
 | Hook | Event | Purpose | Platform |
 |------|-------|---------|----------|
+| [bm25-routing/bm25-suggest.js](./bm25-routing/bm25-suggest.js) | UserPromptSubmit | BM25 lexical skill routing with self-calibrating thresholds | Node.js |
+| [bash/smart-suggest.sh](./bash/smart-suggest.sh) | UserPromptSubmit | Regex-based behavioral coach with 3-tier priority (enforcement/discovery/contextual) | Bash |
 | [dangerous-actions-blocker.sh](./bash/dangerous-actions-blocker.sh) | PreToolUse | Block dangerous commands/edits | Bash |
 | [security-check.sh](./bash/security-check.sh) | PreToolUse | Block secrets in commands | Bash |
 | [prompt-injection-detector.sh](./bash/prompt-injection-detector.sh) | PreToolUse | Detect injection attempts (+ANSI, null bytes, nested cmd) | Bash |

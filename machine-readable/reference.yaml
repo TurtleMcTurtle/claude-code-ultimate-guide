@@ -198,6 +198,14 @@ deep_dive:
   changelog_fragments_ci: "guide/workflows/changelog-fragments.md:169"  # Independent CI migration check job
   # Smart-Suggest Hook
   smart_suggest_hook: "examples/hooks/bash/smart-suggest.sh"  # UserPromptSubmit behavioral coach, 3-tier priority, ROI logging
+  # Smart-Suggest BM25 Routing
+  smart_suggest_routing: "guide/workflows/smart-suggest-routing.md"  # Two-engine UserPromptSubmit: regex + BM25 lexical skill routing
+  smart_suggest_routing_why: "guide/workflows/smart-suggest-routing.md:24"  # Why regex alone fails on reformulations
+  smart_suggest_routing_corpus: "guide/workflows/smart-suggest-routing.md:68"  # scenarios.json format, positive/negative guidelines
+  smart_suggest_routing_calibration: "guide/workflows/smart-suggest-routing.md:115"  # build-index.js, ok/excluded/conflict status, cache
+  smart_suggest_routing_scoring: "guide/workflows/smart-suggest-routing.md:101"  # BM25-plus K1=1.2 B=0.3, max-per-skill, confidence share
+  smart_suggest_routing_wiring: "guide/workflows/smart-suggest-routing.md:148"  # settings.json nested shape, timeout 2s, Node.js runtime
+  smart_suggest_routing_example: "examples/hooks/bm25-routing/"  # Runnable Node.js example with corpus scaffolding
   # Identity Re-injection After Compaction (Nick Tune pattern, Feb 2026)
   identity_reinjection_hook: "guide/ultimate-guide.md:10171"  # UserPromptSubmit guard: re-injects agent identity lost after context compaction
   identity_reinjection_example: "examples/hooks/bash/identity-reinjection.sh"  # Checks last assistant message for identity marker, injects additionalContext if missing
