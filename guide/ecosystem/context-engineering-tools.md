@@ -18,7 +18,7 @@ This page maps the ecosystem of tools that help you manage what enters the conte
 
 1. [The Mental Model](#1-the-mental-model)
 2. [Core Concepts](#2-core-concepts)
-3. [Output Compression: CLI & Tool Output](#3-output-compression-cli--tool-output) (RTK, Headroom, context-mode, stacklit)
+3. [Output Compression: CLI & Tool Output](#3-output-compression-cli--tool-output) (RTK, Headroom, tilth, context-mode, stacklit)
 4. [Prompt Compression](#4-prompt-compression)
 5. [AI Gateways](#5-ai-gateways)
 6. [RAG Optimization](#6-rag-optimization)
@@ -117,17 +117,19 @@ The design philosophy: suppress successful output, surface failures. A test suit
 
 RTK supports custom filters via TOML DSL (`.rtk/filters.toml`) for project-specific output patterns without writing Rust. See [Third-Party Tools: RTK](./third-party-tools.md#rtk-rust-token-killer) for the complete feature reference.
 
+**Real-world cost impact**: Real-world billing data from the codepointer substack ($926 API bill, analyzed) shows that bash output accounts for roughly 12% of total token usage in a typical Claude Code session, not the dominant source. File reads represent approximately 65%. At 60-90% compression on bash output alone, RTK's real API cost impact is in the range of 6-10% of the total bill, not 60-90%. The per-command savings are genuine; the headline "60-90% savings" refers to the compression ratio on the commands RTK processes, not to overall session cost reduction. For total context efficiency, pair RTK with a file-read compression tool like lean-ctx or tilth (see below).
+
 ### Headroom
 
 Headroom targets a different problem: structured data returned by tools (JSON payloads, database results, API responses) that is large but not entirely droppable.
 
-The key difference from RTK: Headroom is **lossless**. Rather than discarding content, it replaces verbose data with a compressed summary and registers the original with a retrieval handle. If the model determines it needs the full data, it can call a tool to fetch it. This preserves the agent's ability to access detail on demand without loading everything upfront.
+The key difference from RTK: Headroom is lossless. Rather than discarding content, it replaces verbose data with a compressed summary and registers the original with a retrieval handle. If the model determines it needs the full data, it can call a tool to fetch it. This preserves the agent's ability to access detail on demand without loading everything upfront.
 
 | Attribute | Details |
 |-----------|---------|
 | **Source** | [headroom.ai](https://headroom.ai) |
 | **Compression** | 70–95% on structured tool output |
-| **Architecture** | Lossless — original accessible via retrieval handle |
+| **Architecture** | Lossless (original accessible via retrieval handle) |
 | **Compression models** | SmartCrusher (fast), Kompress (high fidelity) |
 
 When to choose Headroom over RTK:
@@ -141,6 +143,51 @@ When RTK is sufficient:
 - Output is unstructured command-line text
 - Successful runs produce noise you definitively do not need
 - Simplicity and zero infrastructure is preferred
+
+### tilth
+
+tilth is an MCP server for code navigation that targets the largest single source of token usage in Claude Code sessions: file reads. Rather than returning full file contents, it provides structural navigation via tree-sitter, so the model reads shapes and relationships instead of raw text.
+
+| Attribute | Details |
+|-----------|---------|
+| **Source** | [github.com/jahala/tilth](https://github.com/jahala/tilth) |
+| **Install** | `cargo install tilth` then `tilth install claude-code` |
+| **Architecture** | MCP server, installs into Claude Code |
+| **Parser** | tree-sitter (multi-language) |
+
+The core tools it exposes:
+
+- **File read with auto-outline**: for large files, instead of the full text, returns a structural skeleton with section names and line ranges. The model requests specific ranges on demand.
+- **Symbol search**: definitions, usages, and resolved callees in a single call, replacing the grep-then-read loop.
+- **`--callers`**: all call sites of a symbol, structurally, not via text search.
+- **`--deps`**: imports and dependents of a file, useful before a refactor to understand blast radius.
+- **`grok <symbol>`**: everything about one symbol in one call: signature, callers, callees, sibling functions, associated tests.
+- **Structural diff**: change summary at the function level, not the line level.
+- **Session dedup**: symbols already shown in the session are marked `[shown earlier]` rather than re-expanded.
+
+**Benchmarks** (160 runs across 4 real repositories, metric = cost per correct answer):
+
+| Model | Without tilth | With tilth | Cost change | Accuracy change |
+|-------|--------------|------------|-------------|----------------|
+| Sonnet 4.6 | baseline | tilth | -44% | 84% → 94% |
+| Opus 4.6 | baseline | tilth | -39% | 91% → 92% |
+| Haiku 4.5 | baseline | tilth | -38% | 54% → 73% |
+| Average | | | -40% | 76% → 86% |
+
+The "cost per correct answer" framing is meaningful: it captures both the efficiency gain and the accuracy improvement simultaneously. A tool that saves tokens but degrades output quality is not useful. tilth shows gains on both dimensions.
+
+Why file reads are the right target: they represent about 65% of total token usage in a real Claude Code session (versus ~12% for bash output). Compressing the larger pool produces proportionally larger savings on the total bill.
+
+**Install:**
+
+```bash
+cargo install tilth
+tilth install claude-code   # registers the MCP server in Claude Code
+```
+
+No per-project configuration is needed after global install.
+
+**Comparison with lean-ctx**: Both tilth and lean-ctx use tree-sitter to compress file reads. lean-ctx operates as a hook-level redirect (intercepts native Read calls at the MCP layer), while tilth exposes explicit navigation tools the model calls directly. lean-ctx is more transparent and requires no change to how the model requests files. tilth gives the model more control over what it fetches but requires it to use the tilth tools rather than standard read operations. On teams that want the model to actively navigate code structure rather than have reads compressed passively, tilth's explicit tools fit better.
 
 ### context-mode
 
@@ -507,6 +554,7 @@ These tools are not mutually exclusive. Langfuse for tracing plus Phoenix for RA
 | Problem | Tool |
 |---------|------|
 | Command outputs flooding context | RTK |
+| File reads consuming most of context budget | tilth or lean-ctx |
 | Monitoring token spend | ccusage (see [Third-Party Tools](./third-party-tools.md)) |
 | Context growing too long in a session | `/compact` at 70% usage |
 | Forgetting past session decisions | ICM memory system |

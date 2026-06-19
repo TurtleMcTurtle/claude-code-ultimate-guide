@@ -338,6 +338,94 @@ Highest value on TypeScript, Rust, or Python projects where large files are read
 
 ---
 
+### tilth
+
+An MCP server for structural code navigation, targeting the largest single token cost in a Claude Code session: file reads. Instead of loading full file contents, tilth exposes tree-sitter-powered tools the model calls explicitly to navigate code by shape rather than by text.
+
+| Attribute | Details |
+|-----------|---------|
+| **Source** | [github.com/jahala/tilth](https://github.com/jahala/tilth) |
+| **Install** | `cargo install tilth` then `tilth install claude-code` |
+| **Language** | Rust |
+| **Architecture** | MCP server (installs into Claude Code) |
+| **Parser** | tree-sitter (multi-language) |
+
+**Key tools exposed to the model**:
+
+- File read with auto-outline: large files return a structural skeleton with section names and line ranges; the model requests specific ranges on demand
+- Symbol search: definitions, usages, and resolved callees in one call, replacing the grep-then-read loop
+- `--callers`: all call sites of a symbol, structurally rather than via text search
+- `--deps`: imports and dependents of a file, for understanding blast radius before a refactor
+- `grok <symbol>`: signature, callers, callees, sibling functions, and associated tests for one symbol in one call
+- Structural diff: changes summarized at the function level, not the line level
+- Session dedup: symbols already shown in the current session are marked `[shown earlier]` instead of being re-expanded
+
+**Benchmarks** (160 runs, 4 real repositories, metric = cost per correct answer):
+
+| Model | Cost change | Accuracy change |
+|-------|-------------|----------------|
+| Sonnet 4.6 | -44% | 84% → 94% |
+| Opus 4.6 | -39% | 91% → 92% |
+| Haiku 4.5 | -38% | 54% → 73% |
+| Average | -40% | 76% → 86% |
+
+The benchmark metric is cost per correct answer, not tokens saved in isolation. This matters: a tool that saves tokens but degrades output quality provides no real value. tilth improves on both dimensions.
+
+Why file reads are the right target: real-world billing data shows they account for approximately 65% of total token usage in a Claude Code session, versus roughly 12% for bash output. Tools that compress file reads move a larger share of the total cost than CLI output compressors can.
+
+```bash
+cargo install tilth
+tilth install claude-code   # registers the MCP server in Claude Code
+```
+
+No per-project configuration is required after global install.
+
+**Comparison with lean-ctx**: Both use tree-sitter to reduce file read token cost. lean-ctx works as a hook-level redirect that intercepts native Read calls transparently, requiring no change to model behavior. tilth exposes explicit navigation tools the model must call directly, giving it more control over what it fetches at the cost of requiring the model to use tilth's API rather than standard reads. Both approaches are valid; the right choice depends on whether you prefer passive compression or explicit navigation.
+
+**When to use tilth**:
+
+- TypeScript, Rust, or Python projects where large source files are read repeatedly
+- Sessions where context fills before the task completes
+- Codebases where call graph navigation (callers, callees, deps) is frequent
+- When you want accuracy improvements alongside cost reduction, not just compression
+
+---
+
+### maki
+
+A standalone TUI agent written in Rust (using ratatui) that replaces Claude Code entirely rather than augmenting it. maki is not a Claude Code plugin or MCP add-on; it is an alternative agent with its own interface and context management architecture.
+
+| Attribute | Details |
+|-----------|---------|
+| **Source** | [github.com/tontinton/maki](https://github.com/tontinton/maki) |
+| **Language** | Rust (ratatui TUI) |
+| **Architecture** | Standalone agent (replaces Claude Code) |
+| **LLM providers** | Anthropic, OpenAI, Google, Copilot, Ollama, Mistral, DeepSeek, OpenRouter |
+
+**Context efficiency tools built into maki**:
+
+The `index` tool: tree-sitter skeleton with exact line ranges. Measured overhead per turn: +59 tokens (the index call itself). Measured saving per turn: -224 tokens on reads. Net: -165 tokens per turn. The maki README notes that bash output is only 12% of total token usage in a typical session, so RTK-style bash compression saves roughly 6% of total cost at best. File reads (65% of total) are where the larger gains are.
+
+The `code_execution` tool: an embedded Python interpreter (monty) that can filter, transform, and aggregate data before it enters the context window. Instead of the model reading a raw file to count something, it writes and runs a script; only the result enters context.
+
+The `task` tool: sub-agent delegation with dynamic model selection (haiku for simple subtasks, sonnet or opus for complex ones), keeping expensive model calls proportional to the reasoning actually required.
+
+**Important distinction**: maki is architecturally separate from Claude Code. You cannot use maki as a Claude Code extension; choosing maki means replacing Claude Code for the sessions where you use it. Teams committed to the Claude Code ecosystem (hooks, skills, CLAUDE.md hierarchy, MCP registry) will not benefit from maki's internal tooling. maki is most relevant if you want a single tool that works across multiple LLM providers or prefer a self-contained Rust binary with no external dependencies.
+
+**When to consider maki**:
+
+- You work across multiple LLM providers and want a single interface
+- You want fine-grained context management without installing separate MCP servers
+- You are building or experimenting with agent architecture and want access to the internals
+
+**When Claude Code remains the better fit**:
+
+- You rely on Claude Code's hook system, skills, or CLAUDE.md path-scoping
+- Your team shares MCP server configurations via `.mcp.json`
+- You need Claude-specific features (extended thinking, Projects, memory systems)
+
+---
+
 ### mcp2cli
 
 A universal CLI bridge that converts any MCP server, OpenAPI spec, or GraphQL endpoint into shell commands — without injecting tool schemas into the LLM context. The key insight: most MCP clients push the full schema of every registered tool into context on every turn, whether the agent needs it or not. mcp2cli replaces that with lazy loading.
