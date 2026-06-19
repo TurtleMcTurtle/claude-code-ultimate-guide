@@ -7,7 +7,7 @@ This repository contains **documentation and educational templates** for Claude 
 **Security concerns specific to this repository:**
 - Documentation accuracy for security practices
 - Template code quality and security patterns
-- Threat database integrity ([`machine-readable/threat-db.yaml`](./machine-readable/threat-db.yaml))
+- Threat database integrity ([`examples/commands/resources/threat-db.yaml`](./examples/commands/resources/threat-db.yaml))
 
 **Out of scope:**
 - Security vulnerabilities in Claude Code CLI itself → Report to [Anthropic](https://github.com/anthropics/claude-code/security)
@@ -30,7 +30,7 @@ If you discover a security concern related to this guide (examples: malicious te
 This guide maintains comprehensive security documentation:
 
 - **[Security Hardening Guide](./guide/security/security-hardening.md):** MCP vetting, injection defense, audit workflows
-- **[Threat Database](./machine-readable/threat-db.yaml):** 18 CVEs, 341 malicious skills
+- **[Threat Database](./examples/commands/resources/threat-db.yaml):** 18 CVEs, 341 malicious skills
 - **[Security Hooks](./examples/hooks/):** 30 production hooks (bash + PowerShell)
 - **[Security Commands](./examples/skills/):** `/security-check`, `/security-audit`, `/update-threat-db`
 

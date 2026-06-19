@@ -14652,7 +14652,7 @@ Cette version apporte des améliorations de performances, des corrections de bug
 - **Migration des points d'accès API** : Tous les points d'accès ont été déplacés de `/api/v1` vers `/v2`
   - **Action requise** : Mettez à jour le code de votre client API
   - **Calendrier** : Les anciens points d'accès cesseront de fonctionner le 1er février 2025
-  - **Guide de migration** : [Voir docs/migration-v2.md](./docs/migration-v2.md)
+  - **Guide de migration** : docs/migration-v2.md (à venir)
 
 **Journal des modifications complet** : v1.9.0...v2.0.0
 ```

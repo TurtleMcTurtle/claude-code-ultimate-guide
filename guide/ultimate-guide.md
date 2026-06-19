@@ -15677,7 +15677,7 @@ This release brings performance improvements, bug fixes, and a new avatar featur
 - **API Endpoint Migration**: All endpoints have moved from `/api/v1` to `/v2`
   - **Action Required**: Update your API client code
   - **Timeline**: Old endpoints will stop working on February 1, 2025
-  - **Migration Guide**: [See docs/migration-v2.md](./docs/migration-v2.md)
+  - **Migration Guide**: docs/migration-v2.md (forthcoming)
 
 **Full Changelog**: v1.9.0...v2.0.0
 ```

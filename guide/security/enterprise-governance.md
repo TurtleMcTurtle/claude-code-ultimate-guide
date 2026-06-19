@@ -87,7 +87,7 @@ What are you governing?
 
 A usage charter answers the fundamental question: "What are we allowed to do with Claude Code at this company?" Without it, each team answers differently, creating inconsistent risk exposure.
 
-This is the lean version. For a full charter with legal considerations, see [Whitepaper #11: Enterprise AI Governance](../../whitepapers/en/11-enterprise-ai-governance.qmd) (when available).
+This is the lean version. For a full charter with legal considerations, see [Whitepaper #11: Enterprise AI Governance](https://cc.bruniaux.com/whitepapers/) (when published).
 
 ### 2.1 Lean Charter Template
 
