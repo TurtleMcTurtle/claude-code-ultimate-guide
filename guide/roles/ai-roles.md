@@ -108,7 +108,7 @@ Technical writer, QA engineer, domain expert (law, medicine, finance), content s
 
 Context engineering is the evolution of prompt engineering. Where prompt engineers craft instructions, context engineers design **systems** that give AI models the right information, at the right time, in the right format. Andrej Karpathy explicitly moved from "vibe coding" framing to "context engineering" as the more precise description of this work.
 
-See the [Context Engineering reference](./context-engineering.md) for the full discipline — including the ACE pipeline (Section 6), the L0→L5 maturity model (Section 9), and the operational mechanisms that separate a Level 4 from a Level 5 system: signal taxonomy and causal attribution (Section 10), PR-based loop closure (Section 11), ejection of dormant rules (Section 12), constitutional audits (Section 13), and multi-dev profile reconciliation (Section 14).
+See the [Context Engineering reference](../core/context-engineering.md) for the full discipline — including the ACE pipeline (Section 6), the L0→L5 maturity model (Section 9), and the operational mechanisms that separate a Level 4 from a Level 5 system: signal taxonomy and causal attribution (Section 10), PR-based loop closure (Section 11), ejection of dormant rules (Section 12), constitutional audits (Section 13), and multi-dev profile reconciliation (Section 14).
 
 > "Context Engineering is providing the right information and tools, in the right format, at the right time." — Philipp Schmid, Google
 

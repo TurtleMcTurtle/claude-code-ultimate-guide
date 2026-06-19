@@ -29,10 +29,10 @@ If you discover a security concern related to this guide (examples: malicious te
 
 This guide maintains comprehensive security documentation:
 
-- **[Security Hardening Guide](./guide/security-hardening.md)** — MCP vetting, injection defense, audit workflows
-- **[Threat Database](./machine-readable/threat-db.yaml)** — 18 CVEs, 341 malicious skills
-- **[Security Hooks](./examples/hooks/)** — 30 production hooks (bash + PowerShell)
-- **[Security Commands](./examples/skills/)** — `/security-check`, `/security-audit`, `/update-threat-db`
+- **[Security Hardening Guide](./guide/security/security-hardening.md):** MCP vetting, injection defense, audit workflows
+- **[Threat Database](./machine-readable/threat-db.yaml):** 18 CVEs, 341 malicious skills
+- **[Security Hooks](./examples/hooks/):** 30 production hooks (bash + PowerShell)
+- **[Security Commands](./examples/skills/):** `/security-check`, `/security-audit`, `/update-threat-db`
 
 ## Security Maintenance
 
