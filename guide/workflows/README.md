@@ -179,6 +179,21 @@ Systematically explore and understand unfamiliar codebases.
 
 ## Multi-Agent & Advanced
 
+### [Dynamic Workflows](./dynamic-workflows.md) ⭐ NEW
+
+JavaScript scripts that orchestrate tens to hundreds of subagents with deterministic control flow, parallel fan-out, and automatic resume on interruption.
+
+**When to use**: Multi-stage parallelizable work, long-running jobs, tasks needing structured data handoffs between phases, or any situation where a single agent would hit context limits
+
+**Key Topics**:
+- Primitive reference: `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()`, `budget`
+- `pipeline()` vs `parallel()` with benchmark data (3x latency difference, 2x token difference)
+- Schema-structured outputs across phases
+- 5 named patterns: adversarial verification, loop-until-dry, judge panels, multi-modal sweep, plan-execute-review
+- Behavioral guarantees: determinism constraints, resume/caching, concurrency caps
+
+---
+
 ### [Agent Teams](./agent-teams.md)
 
 Orchestrate multiple specialized agents working in parallel on complex tasks.
@@ -236,6 +251,7 @@ Multi-session task tracking with TodoWrite, tasks API, and context persistence a
 | **Social previews** | [OG Image Generation](./og-image-generation.md) |
 | **Conference talk from raw material** | [Talk Preparation Pipeline](./talk-pipeline.md) |
 | **Audio feedback** | [TTS Setup](./tts-setup.md) |
+| **Deterministic multi-agent orchestration** | [Dynamic Workflows](./dynamic-workflows.md) |
 | **Multi-agent tasks** | [Agent Teams](./agent-teams.md) |
 | **First agent team** | [Agent Teams Quick Start](./agent-teams-quick-start.md) |
 | **Cost-optimized planning** | [Dual-Instance Planning](./dual-instance-planning.md) |

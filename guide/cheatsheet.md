@@ -372,6 +372,40 @@ Instructions for what to do...
 $ARGUMENTS[0] $ARGUMENTS[1] (or $0 $1) - user args
 ```
 
+### Dynamic Workflow (`.claude/workflows/name.js`)
+
+```js
+export const meta = {
+  name: 'my-workflow',
+  description: 'What this orchestrates',
+  phases: [{ title: 'Analyze' }, { title: 'Verify' }],
+};
+// meta must be the first statement, a pure literal (no variables/spreads)
+
+export default async function ({ agent, parallel, pipeline, phase, log, args, budget }) {
+  phase('Analyze');
+  const results = await parallel(
+    ITEMS.map((item) => () => agent(`Analyze ${item}.`, { schema: MY_SCHEMA }))
+  );
+  return results.filter(Boolean);
+}
+```
+
+Trigger: type `ultracode` in the prompt (or ask in your own words). Monitor: `/workflows`.
+
+| Primitive | Behavior |
+|-----------|----------|
+| `agent(prompt, { schema })` | Spawn one subagent; returns text or validated JSON |
+| `parallel([() => agent(...)])` | Barrier: all run concurrently, return when slowest finishes |
+| `pipeline(items, stage1, stage2)` | No barrier: items flow through stages independently |
+| `phase(title)` | Update progress label in `/workflows` UI |
+| `log(msg)` | Emit progress message |
+| `budget.remaining()` | Guard open-ended loops (budget hits 1000-agent cap otherwise) |
+
+Key rules: orchestrator consumes 0 tokens; `Date.now()`/`Math.random()` unavailable (breaks resume); filter `parallel()` results with `.filter(Boolean)`.
+
+Full reference: [Dynamic Workflows](./workflows/dynamic-workflows.md)
+
 ### Hook (macOS/Linux: `.sh` | Windows: `.ps1`)
 
 **Bash** (macOS/Linux):

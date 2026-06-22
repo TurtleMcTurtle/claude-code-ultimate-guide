@@ -178,6 +178,12 @@ Creates a new file or overwrites an existing one. If the target path already exi
 
 Runs a JavaScript script that orchestrates many subagents in the background and returns one consolidated result. Claude uses the `ultracode` keyword (renamed from `workflow` in v2.1.160, a breaking change) to trigger multi-agent fan-out. Monitor running workflows with `/workflows`. Requires explicit user opt-in: Claude does not start a workflow unless asked.
 
+The orchestrator script itself consumes zero tokens. All token cost comes from `agent()` calls. Workflow scripts use four primitives: `agent()` spawns individual subagents; `parallel()` runs a batch concurrently and waits for all (barrier); `pipeline()` fans items through stages without a global barrier between stages; `phase()` updates the UI progress label. The `meta` export at the top of the file declares the workflow name and phase headings.
+
+Workflow scripts store progress as they run: an interrupted job resumes from the last completed unit rather than starting over. For this to work, the orchestrator must be deterministic: `Date.now()`, `Math.random()`, and Node.js APIs are unavailable inside the orchestrator. Pass timestamps and seeds via the `args` global.
+
+For the full primitive reference, behavioral guarantees, and common patterns (adversarial verification, loop-until-dry, judge panels), see [Dynamic Workflows](../workflows/dynamic-workflows.md).
+
 ---
 
 ## Advanced tools: how to trigger them
