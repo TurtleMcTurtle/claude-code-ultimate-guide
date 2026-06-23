@@ -1,14 +1,16 @@
 ---
-title: "Third-Party Tools for Claude Code"
-description: "Community tools for token tracking, context compression, session management, configuration, security scanning, project context bootstrapping, hook utilities, alternative UIs, and knowledge graph generation"
+title: "Claude Code Community Tools: 40+ Extensions for Token Tracking, Context & Orchestration (2026)"
+description: "Curated catalog of 40+ community-built tools that extend Claude Code: token tracking, context compression, session management, alternative UIs, multi-agent orchestration, and security scanning. Verified against public repos, with install commands and when-to-use comparisons."
 tags: [reference, integration, plugin, security]
 ---
 
-# Third-Party Tools for Claude Code
+# Claude Code Community Tools: 40+ Extensions Verified June 2026
 
-> Community tools for token tracking, context compression, session management, configuration, hook utilities, and alternative UIs.
->
-> **Last verified**: June 2026
+This page catalogs community-built tools that extend Claude Code, organized by use case. Every entry has been verified against its public repository or package registry. For each category, the "When to use" comparison explains which tool fits which workflow, because the right choice depends on your stack and constraints, not just star count.
+
+This is not a list of AI tools that complement Claude Code generally. It covers only tools whose primary purpose is extending the Claude Code CLI itself. For broader AI ecosystem coverage, see [AI Ecosystem](/guide/ai-ecosystem/). For MCP server recommendations, see [MCP Servers Ecosystem](/guide/mcp-servers-ecosystem/).
+
+> **Last verified**: June 2026. 40+ tools across 17 categories.
 
 ## Table of Contents
 
@@ -71,6 +73,40 @@ The most mature cost tracking tool for Claude Code. Parses local session data to
 
 > **Cross-ref**: The main guide covers basic ccusage commands at [ultimate-guide.md Section 2.4](../ultimate-guide.md) (cost monitoring).
 > For DIY cost tracking with hooks, see [Observability](../ops/observability.md).
+
+---
+
+### CodeBurn
+
+CodeBurn reads the same `~/.claude/projects/` JSONL session logs as ccusage, but answers a different question. Where ccusage answers "how much did I spend?", CodeBurn answers "what did I spend it on?" by breaking token usage down by turn type and correlating spend with git history via its `yield` command.
+
+| Attribute | Details |
+|-----------|---------|
+| **Source** | [GitHub: getagentseal/codeburn](https://github.com/getagentseal/codeburn) |
+| **Install** | `npm install -g codeburn` or `npx codeburn` |
+| **Stars** | 8,100+ (June 2026; third-party indexers may show ~2.7K due to update lag) |
+| **Language** | Node.js 22.13+ |
+| **Version** | v0.9.13 (June 14, 2026) |
+| **Multi-provider** | Claude Code, Codex, Gemini CLI, Cursor, Cline/Roo |
+
+**Key features**:
+
+- `codeburn` - interactive TUI dashboard (last 7 days by default)
+- `codeburn today` / `codeburn month` / `codeburn overview` / `codeburn report` - time-scoped summaries
+- `codeburn optimize` - scans for waste patterns: retry loops, redundant re-reads, abandoned sessions
+- `codeburn compare` - side-by-side model performance breakdown
+- `codeburn yield` - correlates sessions with git commits (which sessions shipped code vs. which were abandoned or reverted)
+- `codeburn models` - per-model token and cost breakdown
+- `codeburn export` - CSV or JSON output
+- `codeburn menubar` - macOS menu bar widget (SwiftBar)
+- `codeburn plan set [claude-max|claude-pro|custom]` - subscription plan tracking
+- MCP server (v0.9.12+): exposes usage and savings data to other agents
+
+**Turn classification**: CodeBurn classifies every turn into 13 categories using local deterministic pattern matching (no LLM calls). Categories include Coding, Debugging, Refactoring, Testing, Exploration, Brainstorming, Planning, Feature Dev, Delegation, Git Ops, and Conversation. The most diagnostic finding in practice: "Conversation" turns (model responding without tool use) often account for 40-56% of session spend. Creator-reported examples include a JWT auth task where 5,200 of 15,600 tokens went to type corrections, and a PostgreSQL migration where 19,400 of 40,700 tokens went to foreign key debugging. These are illustrative data points, not reproducible benchmarks.
+
+**Limitations**: Read-only, so it cannot interrupt a runaway session. Cost estimates use LiteLLM pricing rather than Anthropic billing API data, so figures can differ by $1-2/session from invoices. Format-dependent: an Anthropic JSONL schema change will break parsing until CodeBurn updates. Not listed in the awesome-claude-code registry.
+
+**When to use CodeBurn vs ccusage**: ccusage is the right default for cost monitoring and billing-window tracking. CodeBurn adds forensic analysis: which turn types drive your spend, which sessions produced code that shipped, where retry loops inflate costs. Use both together.
 
 ---
 

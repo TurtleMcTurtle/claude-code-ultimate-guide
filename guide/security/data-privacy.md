@@ -1,12 +1,14 @@
 ---
-title: "Data Privacy & Retention Guide"
-description: "What data Claude Code sends to Anthropic servers and how to protect sensitive information"
+title: "Claude Code Data Privacy: Risks the Official Docs Don't Cover"
+description: "The privacy risks specific to Claude Code that docs.anthropic.com doesn't document: /bug command 5-year retention override, MCP database exposure, silent browser host installation, and how to lock down each with permissions.deny and PreToolUse hooks."
 tags: [privacy, security, guide]
 ---
 
-# Data Privacy & Retention Guide
+# Claude Code Data Privacy: What the Official Docs Don't Cover
 
-> **Critical**: Everything you share with Claude Code is sent to Anthropic servers. This guide explains what data leaves your machine and how to protect sensitive information.
+The Anthropic privacy page documents retention tiers (Consumer 5 years, ZDR 0 days, etc.). That's useful background, but it doesn't cover the risks that are specific to Claude Code as a local CLI tool. This guide focuses on those: the six data exposure vectors that exist because Claude Code runs with filesystem access, spawns subprocesses, and calls MCP servers, and how to block each one.
+
+> **Quick reference**: Anthropic retention tiers are summarized in the table below. Full official policy at [claude.ai/settings/data-privacy-controls](https://claude.ai/settings/data-privacy-controls).
 
 ## TL;DR - Retention Summary
 
