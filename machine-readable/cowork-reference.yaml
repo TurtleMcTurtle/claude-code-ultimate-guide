@@ -218,3 +218,15 @@ rules:
   5: "Budget 30-50% time for OCR error correction"
   6: "Disconnect VPN before using"
   7: "Backup before destructive operations"
+
+# ════════════════════════════════════════════════════════════════
+# SHARED TEAM KNOWLEDGE (Code + Cowork)
+# ════════════════════════════════════════════════════════════════
+shared_knowledge:
+  pattern: "Versioned Markdown repo synced to ~/Shared/ — Cowork reads local files, no API or connector needed"
+  shared_context: "~/Shared/CLAUDE.md readable by both Code (filesystem) and Cowork (granted folder access)"
+  constraint: "Cowork cannot call MCP connectors or make API calls — it reads the synced local copy of the vault"
+  code_cowork_bridge: "Clone the knowledge repo to a stable path on each machine; grant Cowork access to that folder"
+  rag_note: "For <100 docs: direct file reads. >1000 docs: add RAG layer (Onyx/LlamaCloud/Ragie) as MCP server for Code; Cowork still reads the local copy"
+  live_systems: "For Jira/Confluence/Notion: native plugins in Cowork; Atlassian Remote MCP or Notion MCP for Claude Code"
+  full_guide: "guide/ecosystem/team-knowledge-base.md"

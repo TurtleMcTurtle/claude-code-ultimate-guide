@@ -1278,6 +1278,25 @@ deep_dive:
   cowork_workflows: "https://github.com/FlorianBruniaux/claude-cowork-guide/tree/main/workflows"
   cowork_section: "guide/ecosystem/ai-ecosystem.md:1809"
   cowork_ultimate_guide: 20348
+  # Team Knowledge Infrastructure (guide/ecosystem/team-knowledge-base.md) - Added 2026-06-23
+  team_knowledge_guide: "guide/ecosystem/team-knowledge-base.md"
+  team_knowledge_three_way: "guide/ecosystem/team-knowledge-base.md#the-one-tool-for-three-needs-trap"  # static docs vs live systems vs team workflows
+  team_knowledge_rag_threshold: "guide/ecosystem/team-knowledge-base.md#the-threshold-when-to-add-rag"  # ~100-1000 docs: switch from direct read to RAG
+  team_knowledge_static_vault: "guide/ecosystem/team-knowledge-base.md#tier-1-versioned-markdown-vault-static-docs"  # versioned Markdown + ~/Shared/CLAUDE.md
+  team_knowledge_shared_claudemd: "guide/ecosystem/team-knowledge-base.md#the-root-claudemd-as-index"  # ~/Shared/CLAUDE.md Code+Cowork bridge
+  team_knowledge_connectors_mcp: "guide/ecosystem/team-knowledge-base.md#tier-2-mcp-connectors-for-live-systems"  # Atlassian/Notion/GitBook MCP
+  team_knowledge_atlassian_mcp: "guide/ecosystem/team-knowledge-base.md#atlassian-jira--confluence"  # Jira + Confluence
+  team_knowledge_notion_mcp: "guide/ecosystem/team-knowledge-base.md#notion"
+  team_knowledge_gitbook_mcp: "guide/ecosystem/team-knowledge-base.md#gitbook"
+  team_knowledge_onyx: "guide/ecosystem/team-knowledge-base.md#onyx-self-hosted-open-source"  # ex-Danswer, self-hosted enterprise RAG
+  team_knowledge_managed_rag: "guide/ecosystem/team-knowledge-base.md#tier-3-rag-at-scale"  # LlamaCloud, Ragie
+  team_knowledge_llamacloud: "guide/ecosystem/team-knowledge-base.md#llamacloud-managed"
+  team_knowledge_ragie: "guide/ecosystem/team-knowledge-base.md#ragie-fastest-managed-setup"
+  team_knowledge_kb_internal_pattern: "guide/ecosystem/team-knowledge-base.md#a-documented-reference-point"  # kb.internal.example.com/mcp single-endpoint shape
+  team_knowledge_workflows_plugins: "guide/ecosystem/team-knowledge-base.md#the-plugin-pattern-distributing-team-workflows"  # plugins for shared skills
+  team_knowledge_decision_table: "guide/ecosystem/team-knowledge-base.md#decision-table"
+  team_knowledge_problem: "Company KB accessible from both Claude Code (CLI) and Cowork (desktop, no API/no code exec)"
+  team_knowledge_threshold: "Static <100 docs: direct read | 100-1000: judgment call | >1000: RAG required"
   # Experimental Features
   teammatetool: 3976
   teammatetool_status: "Experimental, progressive rollout, feature-flagged"

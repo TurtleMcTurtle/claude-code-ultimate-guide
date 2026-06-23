@@ -25670,6 +25670,8 @@ If you work with non-technical team members, **Cowork** brings Claude's agentic 
 
 **Collaboration pattern**: Developers use Claude Code for specs → PMs use Cowork for stakeholder summaries. Shared context via `~/Shared/CLAUDE.md`.
 
+> **Full coverage**: For setting up a company knowledge base accessible from both tools (versioned Markdown vault, MCP connectors for Jira/Confluence/Notion, RAG at scale), see [Team Knowledge Infrastructure](./ecosystem/team-knowledge-base.md).
+
 > **Availability**: Pro ($20/mo) or Max ($100-200/mo) subscribers, macOS only (Jan 2026).
 > See [AI Ecosystem Section 9](./ecosystem/ai-ecosystem.md#9-claude-cowork-research-preview) for details.
 
