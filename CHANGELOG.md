@@ -12,7 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Documentation
 
-- **Claude Code Releases**: Updated tracking to v2.1.191
+- **Claude Code Releases**: Updated tracking to v2.1.195
+  - v2.1.195: Bug fixes: hook exact-match for hyphenated names, voice dictation, background agent daemons, plugin name mismatch; `CLAUDE_CODE_DISABLE_MOUSE_CLICKS`; Remote provisioning checklist
+  - v2.1.193: ⭐ `claude_code.assistant_response` OTel event (review if logging prompts); `autoMode.classifyAllShell`; live bash path autocomplete; auto memory-pressure reaping
   - v2.1.191: ⭐ `/rewind` works after `/clear`; ~37% CPU reduction during streaming; MCP capability discovery retries; 20+ bug fixes
   - v2.1.190: Bug fixes and reliability improvements
   - v2.1.187: ⭐ `sandbox.credentials` blocks credential file reads; org model restrictions in picker/`--model`/`ANTHROPIC_MODEL`; MCP 5-min hang fix; 15+ bug fixes

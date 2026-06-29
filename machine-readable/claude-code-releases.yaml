@@ -3,8 +3,8 @@
 # Purpose: Track Claude Code product releases for documentation sync
 # Maintained: Manual updates when new releases are announced
 
-latest: "2.1.191"
-updated: "2026-06-25"
+latest: "2.1.195"
+updated: "2026-06-29"
 
 # ════════════════════════════════════════════════════════════════
 # RELEASES (newest first, condensed highlights only)
@@ -14,6 +14,22 @@ releases:
   # ─────────────────────────────────────────────────────────────
   # 2.1.x Series (January-June 2026)
   # ─────────────────────────────────────────────────────────────
+
+  - version: "2.1.195"
+    date: "2026-06-26"
+    highlights:
+      - "Fixed hook matchers with hyphenated identifiers (e.g. `code-reviewer`, `mcp__brave-search`) accidentally substring-matching — now exact-match; use `mcp__brave-search__.*` to match all tools from a hyphenated server"
+      - "Fixed voice dictation on macOS (silence after input device change) and auto-submit for languages without spaces (Japanese, Chinese, Thai)"
+      - "Fixed background agent daemon socket failures, blank screen on crash restart, jobs disappearing when written by newer version; `/plugin` Enable/Disable fix when `plugin.json` name differs from marketplace name"
+      - "Added `CLAUDE_CODE_DISABLE_MOUSE_CLICKS`; Remote session startup now shows provisioning checklist"
+
+  - version: "2.1.193"
+    date: "2026-06-25"
+    highlights:
+      - "⭐ `claude_code.assistant_response` OpenTelemetry event logs model responses; deployments already logging prompt content will also receive response content on upgrade (set `OTEL_LOG_ASSISTANT_RESPONSES=0` to opt out)"
+      - "`autoMode.classifyAllShell` routes all Bash/PowerShell through the auto-mode classifier; denial reasons now shown in transcript, toast, and `/permissions`"
+      - "Live file path autocomplete in bash mode (`!`); startup notice when MCP servers need auth; auto memory-pressure reaping for idle background shell commands"
+      - "Background agents: launch result no longer tells Claude to end its response; MCP headersHelper re-runs on 401/403; plugin auto-rename follows marketplace `renames` maps"
 
   - version: "2.1.191"
     date: "2026-06-24"
