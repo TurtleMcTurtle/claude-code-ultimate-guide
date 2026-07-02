@@ -4,9 +4,9 @@ subtitle: "Réagir automatiquement aux actions de Claude Code"
 card-number: "M11"
 category: "Méthodologie"
 difficulty: "intermediate"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "Mai 2026"
 layout: "two-col"
 lang: fr
@@ -23,9 +23,11 @@ Un hook est un script shell (ou toute commande) exécuté automatiquement quand 
 | Événement | Moment | Peut bloquer |
 |-----------|--------|-------------|
 | `SessionStart` | Démarrage ou reprise | Non |
+| `SessionEnd` | Fin de session | Non |
 | `UserPromptSubmit` | Avant traitement du prompt | Oui |
 | `PreToolUse` | Avant l'appel d'un outil | Oui |
 | `PostToolUse` | Après succès d'un outil | Non |
+| `PreCompact` | Avant compaction du contexte | Oui |
 | `Notification` | Claude envoie une notification | Non |
 | `Stop` | Claude finit de répondre | Oui |
 | `SubagentStop` | Fin d'un sous-agent | Oui |

@@ -1,12 +1,12 @@
 ---
 title: "Code Review (Claude Code feature)"
-description: "Automated multi-agent PR review for Teams and Enterprise — setup, triggers, REVIEW.md configuration, and cost management"
+description: "Automated multi-agent PR review for Teams and Enterprise: setup, triggers, REVIEW.md configuration, and cost management"
 tags: [feature, teams, enterprise, github, code-review]
 ---
 
 # Code Review
 
-> **Availability**: Research preview — Teams and Enterprise plans only. Not available on Free/Pro accounts, nor for organizations with Zero Data Retention (ZDR) enabled.
+> **Availability**: Research preview, Teams and Enterprise plans only. Not available on Free/Pro accounts, nor for organizations with Zero Data Retention (ZDR) enabled.
 > **Launched**: March 9, 2026
 
 Claude Code's Code Review feature runs a multi-agent review on every GitHub pull request. A fleet of specialized agents examines the diff in the context of the full codebase, each looking for a different class of issue (logic errors, security vulnerabilities, edge cases, regressions), followed by a verification pass that filters false positives.
@@ -142,17 +142,18 @@ Code Review is billed on token usage, **separately from your plan's included usa
 ## Cross-reference
 
 For manual code review workflows (CLI, no Teams/Enterprise required):
-- [Multi-agent code review workflow](#split-role-sub-agents) — DIY agent teams via CLI
-- [GitHub Actions integration](./github-actions.md) — custom CI/CD automation (self-hosted alternative to this managed service)
-- GitLab CI/CD — self-hosted Claude integration for GitLab pipelines
-- Code Review plugin — on-demand local reviews before pushing (available in the plugin marketplace)
+- [Multi-agent code review workflow](#split-role-sub-agents): DIY agent teams via CLI
+- [GitHub Actions integration](./github-actions.md): custom CI/CD automation (self-hosted alternative to this managed service)
+- [Multi-provider code review](./multi-provider-code-review.md): running Claude alongside CodeRabbit/Greptile without redundant findings, self-hosted
+- GitLab CI/CD: self-hosted Claude integration for GitLab pipelines
+- Code Review plugin: on-demand local reviews before pushing (available in the plugin marketplace)
 
 ---
 
 ## Known limitations (research preview)
 
-- Teams and Enterprise only — no Free/Pro access
+- Teams and Enterprise only, no Free/Pro access
 - Not available for organizations with Zero Data Retention (ZDR) enabled
 - GitHub only for the managed service (GitLab supported via CI/CD integration, not this feature)
 - Full-repo indexing latency on first activation for large repos
-- Anthropic internal stats: ~7.5 issues found per PR >1000 lines, <1% false positive rate — self-reported, not independently verified
+- Anthropic internal stats: ~7.5 issues found per PR >1000 lines, <1% false positive rate (self-reported, not independently verified)

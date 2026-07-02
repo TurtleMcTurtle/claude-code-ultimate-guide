@@ -4,9 +4,9 @@ subtitle: "Synchroniser sa configuration Claude Code entre plusieurs postes"
 card-number: "T10"
 category: "Technique"
 difficulty: "intermediate"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "Mai 2026"
 layout: "two-col"
 lang: fr
@@ -18,8 +18,8 @@ format:
 
 | Local uniquement | Partageable |
 |-----------------|-------------|
-| `settings.local.json` | `agents/`, `commands/` |
-| Clés API, tokens | `hooks/`, `rules/`, `skills/` |
+| `settings.local.json` | `agents/`, `skills/` |
+| Clés API, tokens | `hooks/`, `rules/` |
 | Historique de sessions | `settings.template.json` |
 | `.env` avec secrets | CLAUDE.md (conventions équipe) |
 
@@ -35,10 +35,9 @@ mkdir ~/claude-config-backup && cd ~/claude-config-backup
 git init
 
 # 2. Créer des symlinks (les changements sont automatiques)
-ln -s ~/.claude/agents   ./agents
-ln -s ~/.claude/commands ./commands
-ln -s ~/.claude/hooks    ./hooks
-ln -s ~/.claude/skills   ./skills
+ln -s ~/.claude/agents ./agents
+ln -s ~/.claude/skills ./skills
+ln -s ~/.claude/hooks  ./hooks
 
 # 3. Template sans secrets
 cp ~/.claude/settings.json ./settings.template.json
@@ -56,7 +55,7 @@ git push -u origin main
 ```bash
 # Machine source (après modification)
 cd ~/claude-config-backup
-git add agents/ commands/ hooks/ skills/
+git add agents/ skills/ hooks/
 git commit -m "Update hooks: add auto-format"
 git push
 
@@ -97,6 +96,6 @@ Avantage : zéro effort de maintenance. Inconvénient : pas d'historique de vers
 ```bash
 # Backup quotidien à 2h du matin
 0 2 * * * tar -czf ~/claude-backups/config-$(date +%F).tar.gz \
-  ~/.claude/agents ~/.claude/commands \
+  ~/.claude/agents ~/.claude/skills \
   ~/.claude/hooks ~/.claude/settings.json
 ```

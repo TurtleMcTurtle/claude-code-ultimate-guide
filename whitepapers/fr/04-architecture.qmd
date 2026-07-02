@@ -2,7 +2,7 @@
 title: "L'Architecture Démystifiée"
 subtitle: "Pas de RAG, pas de magie noire - juste une boucle"
 author: "Florian BRUNIAUX"
-date: 2026-07-01
+date: 2026-07-02
 date-format: "MMMM YYYY"
 version: "3.41.1"
 wp-version: "1.4.0"

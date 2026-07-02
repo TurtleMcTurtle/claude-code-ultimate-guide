@@ -19,11 +19,11 @@ Ready-to-use GitHub Actions workflows that integrate Claude Code into your CI/CD
 
 ## Available Workflows
 
-### 1. Code Review — Prompt-Based (`claude-code-review.yml`) ⭐ Recommended
+### 1. Code Review (Prompt-Based, `claude-code-review.yml`) ⭐ Recommended
 
-**Robust pattern** with externalized prompt, anti-hallucination protocol, and `/claude-review` on-demand trigger.
+Externalized prompt, anti-hallucination protocol, and `/claude-review` on-demand trigger.
 
-The review logic lives in `.github/prompts/code-review.md`, so you can iterate on criteria without touching the workflow YAML. The prompt enforces a verification step before every finding — Claude must confirm an issue with `Read`/`Grep` before reporting it.
+The review logic lives in `.github/prompts/code-review.md`, so you can iterate on criteria without touching the workflow YAML. The prompt enforces a verification step before every finding: Claude must confirm an issue with `Read`/`Grep` before reporting it.
 
 **Features:**
 - Triggers on PR open/sync/ready **and** `/claude-review` comment
@@ -49,14 +49,40 @@ Edit `.github/prompts/code-review.md` to add your stack conventions:
 ```markdown
 ## Stack Context
 - TypeScript strict mode, no `any`
-- React Server Components — no `useEffect` for data fetching
+- React Server Components, no `useEffect` for data fetching
 - All DB writes must go through the repository layer
 - New API routes require integration tests
 ```
 
+**Blocking merge on findings:**
+The `gate` job in this workflow reads the posted review, parses the `### 🔴 Must Fix (n)` count from the summary, and fails the job if `n > 0`. Add `gate` to your branch protection's required status checks to turn advisory findings into an actual merge block. Without that branch protection rule, the review still posts but nothing stops a maintainer from merging past it.
+
 ---
 
-### 2. Auto PR Review (`claude-pr-auto-review.yml`)
+### 2. Code Review (Batched, `claude-code-review-batched.yml`)
+
+For PRs above a file-count threshold (default 75), a single review pass either times out or spreads Claude's attention too thin across unrelated files. This workflow splits the diff into domain-scoped batches (migrations, backend-core, api-routes, frontend, tests-and-tooling), reviews each batch in a parallel matrix job, then synthesizes one final severity table.
+
+**Features:**
+- `check-size` job counts changed files and gates the rest of the workflow on the threshold
+- Matrix `review-batch` job: one parallel run per domain, scoped via `append_system_prompt`
+- `synthesis` job merges all batch comments into a single deduplicated table
+- Same prompt file as the non-batched workflow (`.github/prompts/code-review.md`), no duplicated review criteria to maintain
+
+**Setup:**
+```bash
+cp examples/github-actions/claude-code-review-batched.yml .github/workflows/
+
+# Edit the `matrix.domain` globs to match your actual directory layout.
+# The shipped ones (prisma/migrations, src/server/services, src/components...)
+# are a generic starting point, not a fit for every stack.
+```
+
+Run this alongside `claude-code-review.yml`, not instead of it. Both trigger on the same PR events; the `check-size` job's threshold is what decides which one actually reviews, so keep `BATCH_THRESHOLD` consistent if you gate on file count elsewhere too.
+
+---
+
+### 3. Auto PR Review (`claude-pr-auto-review.yml`)
 
 **Enhanced version** with comprehensive review criteria and smart filtering.
 
@@ -93,7 +119,7 @@ append_system_prompt: |
 
 ---
 
-### 2. Security Review (`claude-security-review.yml`)
+### 4. Security Review (`claude-security-review.yml`)
 
 Runs a focused security scan and comments findings directly on the PR.
 
@@ -121,7 +147,7 @@ cp examples/github-actions/claude-security-review.yml .github/workflows/
 
 ---
 
-### 3. Issue Triage (`claude-issue-triage.yml`)
+### 5. Issue Triage (`claude-issue-triage.yml`)
 
 When a new issue opens, Claude proposes labels/severity and posts a tidy triage comment.
 
@@ -185,9 +211,10 @@ Each model has blind spots. Points raised by 2+ independent reviewers are high-s
 **Step 2: Install Greptile**
 
 1. [greptile.com](https://greptile.com) → connect GitHub account
-2. Select your repo — Greptile indexes the codebase (~5 min)
+2. Select your repo, Greptile indexes the codebase (~5 min)
 3. Configure in dashboard: target branches, focus paths
 4. Reviews post as `greptile[bot]` comments on PRs
+5. Copy `.greptile/config.json`, `.greptile/rules.md`, and `.greptile/files.json` from this directory to your repo root and fill in the placeholders. `rules.md` is where Greptile's cross-file RAG search earns its keep: business invariants that span multiple files (a state machine enforced in one service but not another, a scoping rule that must hold on every query against a sensitive table). Don't restate rules already covered by `.github/prompts/code-review.md` or `.coderabbit.yaml`, split the checklist across the three so each tool owns a distinct set.
 
 **Step 3: Enable synthesis job**
 
@@ -218,18 +245,31 @@ The `multi-reviewer-synthesis` job in `claude-code-review.yml`:
 4. Claude identifies consensus (same finding flagged by 2+ reviewers) vs. unique catches
 5. Posts a structured synthesis comment on the PR
 
+### Scaling to large PRs and repeated pushes
+
+Two problems show up once a repo has real traffic: PRs that touch dozens of files in one go, and PRs that get pushed to five times before merge. Neither is solved by the base workflow above.
+
+**Large PRs**: switch to `claude-code-review-batched.yml` above a file-count threshold (see workflow 2). Splitting the diff by domain keeps each batch focused instead of asking one pass to hold the whole PR in context.
+
+**Repeated pushes**: re-reviewing the full diff on every push burns tokens on code Claude already checked. A delta-review step compares the SHA embedded in the previous review comment (post it as an HTML comment, e.g. `<!-- reviewed-sha: abc123 -->`) against the current push's SHA, and scopes the next review to only the files changed since. This repo does not ship that step as a ready-made template since it depends on how you're already tracking review state (a bot comment, a label, a separate check run); the pattern is: read the last marker, diff `git diff <last-sha>..HEAD --name-only`, pass that file list into `append_system_prompt` the same way the batched workflow scopes by domain.
+
 ### Files in this directory
 
 ```
 examples/github-actions/
-├── README.md                      # This file
-├── claude-code-review.yml         # Main review + optional synthesis job
-├── .coderabbit.yaml               # CodeRabbit config (copy to repo root)
-├── claude-pr-auto-review.yml      # Inline prompt auto-review (alternative)
-├── claude-security-review.yml     # Security-focused scan
-├── claude-issue-triage.yml        # Issue triage workflow
+├── README.md                        # This file
+├── claude-code-review.yml           # Main review + gate job + optional synthesis job
+├── claude-code-review-batched.yml    # Domain-split matrix review for large PRs
+├── .coderabbit.yaml                 # CodeRabbit config (copy to repo root)
+├── .greptile/
+│   ├── config.json                  # Greptile review config (copy to repo root)
+│   ├── rules.md                     # Cross-file invariants rulebook (copy to repo root)
+│   └── files.json                   # Doc-to-glob RAG index (copy to repo root)
+├── claude-pr-auto-review.yml        # Inline prompt auto-review (alternative)
+├── claude-security-review.yml       # Security-focused scan
+├── claude-issue-triage.yml          # Issue triage workflow
 └── prompts/
-    └── code-review.md             # Externalized review prompt (copy to .github/prompts/)
+    └── code-review.md               # Externalized review prompt (copy to .github/prompts/)
 ```
 
 ---
@@ -332,8 +372,10 @@ These workflows consume Anthropic API credits:
 ```
 examples/github-actions/
 ├── README.md                        # This file
-├── claude-code-review.yml           # Prompt-based review + optional synthesis job
+├── claude-code-review.yml           # Prompt-based review + gate job + optional synthesis job
+├── claude-code-review-batched.yml    # Domain-split matrix review for large PRs
 ├── .coderabbit.yaml                 # CodeRabbit config (copy to repo root)
+├── .greptile/                       # Greptile config templates (copy to repo root)
 ├── claude-pr-auto-review.yml        # Inline prompt auto-review (alternative)
 ├── claude-security-review.yml       # Security scanning workflow
 ├── claude-issue-triage.yml          # Issue triage workflow

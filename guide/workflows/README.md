@@ -123,6 +123,16 @@ Connect Claude directly to your GitHub workflow via the official `claude-code-ac
 
 ---
 
+### [Multi-Provider Code Review](./multi-provider-code-review.md) ⭐ NEW
+
+**Run Claude Code Action alongside CodeRabbit and Greptile without triplicate findings**
+
+Non-redundant architecture for three automated reviewers on the same PR: Claude owns deep semantic review and the merge-blocking gate, a deterministic tool owns PASS/FAIL pre-merge checks, a RAG tool owns cross-file invariants. Covers the CI gate script, batching for large PRs, delta-review, and cross-tool deduplication.
+
+**When to use**: Running more than one automated code reviewer and finding the same issue reported three times, or wanting Claude's findings to actually block merge instead of just commenting
+
+---
+
 ### [Cognitive Mode Switching](./gstack-workflow.md) ⭐ NEW
 
 Switch between specialist roles across your ship cycle: strategic product gate, architecture review, paranoid code review, automated release, native browser QA, and retrospective.

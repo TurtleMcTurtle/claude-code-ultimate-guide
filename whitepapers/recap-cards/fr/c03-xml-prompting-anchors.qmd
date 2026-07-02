@@ -4,9 +4,9 @@ subtitle: "Structurer les prompts complexes pour des résultats reproductibles"
 card-number: "C03"
 category: "Conception"
 difficulty: "advanced"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "Mai 2026"
 layout: "two-col"
 lang: fr
@@ -100,4 +100,4 @@ Tags projet : <api_design>, <accessibility>, <perf_budget>
 Pour les features : toujours inclure <context> et <constraints>
 ```
 
-Tous les membres de l'équipe utilisent ensuite le même vocabulaire de tags, ce qui rend les prompts partagés (dans `.claude/commands/`) cohérents et compréhensibles.
+Tous les membres de l'équipe utilisent ensuite le même vocabulaire de tags, ce qui rend les prompts partagés (dans `.claude/skills/`) cohérents et compréhensibles.

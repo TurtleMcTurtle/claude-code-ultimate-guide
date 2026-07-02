@@ -3,11 +3,11 @@ title: "Commandes Essentielles"
 subtitle: "Raccourcis clavier & commandes slash indispensables"
 card-number: "T01"
 category: "Technique"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 difficulty: "beginner"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
-wp-version: "1.1.0"
+version: "3.41.1"
+wp-version: "1.1.1"
 date: "Mai 2026"
 layout: "two-col"
 lang: fr
@@ -70,8 +70,9 @@ claude --allowedTools "Edit,Read,Bash"
 # Lancer Claude Code
 claude
 
-# Avec fichier de contexte
-claude --context CLAUDE.md
+# CLAUDE.md est chargé automatiquement au démarrage
+# Pour ajouter un fichier en cours de session :
+@src/auth.ts Regarde cette fonction
 
 # Mode non-interactif (scripts)
 claude -p "Analyse ce fichier" < input.txt

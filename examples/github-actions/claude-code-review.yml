@@ -76,6 +76,52 @@ jobs:
             }
 
   # ─────────────────────────────────────────────────────────────────────────────
+  # Gate: fail this job if the review found any 🔴 Must Fix finding
+  #
+  # The review posted above does not block merge on its own — GitHub reviews are
+  # advisory unless a branch protection rule requires this check to pass. Add
+  # "gate" to your required status checks to make 🔴 findings actually block merge.
+  # ─────────────────────────────────────────────────────────────────────────────
+  gate:
+    needs: claude-review
+    if: always() && needs.claude-review.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Parse severity table and fail on Must Fix findings
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request?.number ?? context.payload.issue?.number;
+
+            // The review is posted as a PR review (create_pending_pull_request_review +
+            // submit_pending_pull_request_review), so read it from pulls.listReviews,
+            // not issues.listComments.
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            if (reviews.length === 0) {
+              core.setFailed('No review found to gate on — did the review step actually post?');
+              return;
+            }
+
+            const latest = reviews[reviews.length - 1];
+            // Matches "### 🔴 Must Fix (3)" from the prompt's required output format,
+            // see .github/prompts/code-review.md Step 4. Update this regex if you
+            // change the heading format there.
+            const match = latest.body.match(/###\s*🔴\s*Must Fix\s*\((\d+)\)/i);
+            const mustFixCount = match ? parseInt(match[1], 10) : 0;
+
+            if (mustFixCount > 0) {
+              core.setFailed(`${mustFixCount} Must Fix finding(s) — see the review above before merging.`);
+            } else {
+              core.info('No Must Fix findings — gate passed.');
+            }
+
+  # ─────────────────────────────────────────────────────────────────────────────
   # OPTIONAL: Multi-Reviewer Synthesis
   #
   # Enable this job when you have external reviewers posting on PRs:

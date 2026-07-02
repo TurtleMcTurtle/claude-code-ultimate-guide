@@ -2,7 +2,7 @@
 title: "Claude Code : Le Guide de Référence"
 subtitle: "Synthèse complète + workflows avancés"
 author: "Florian BRUNIAUX"
-date: 2026-05-12
+date: 2026-07-02
 date-format: "MMMM YYYY"
 version: "3.41.1"
 wp-version: "1.4.0"

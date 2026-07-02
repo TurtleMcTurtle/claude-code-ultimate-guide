@@ -4,9 +4,9 @@ subtitle: "Quel mécanisme de configuration utiliser selon la situation"
 card-number: "C06"
 category: "Conception"
 difficulty: "intermediate"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "Mai 2026"
 layout: "two-col"
 lang: fr
@@ -40,7 +40,9 @@ La bonne pratique se résume à une distinction simple : ce qui appartient à l'
 // .claude/settings.json (équipe, versionné)
 {
   "hooks": { "PreToolUse": [...] },
-  "allowedTools": ["Edit", "Read", "Bash"]
+  "permissions": {
+    "allow": ["Edit", "Read", "Bash"]
+  }
 }
 ```
 

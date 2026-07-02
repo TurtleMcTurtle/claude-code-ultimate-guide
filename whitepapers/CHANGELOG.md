@@ -11,6 +11,31 @@ Suivi des versions des ebooks, indépendamment de la version du guide.
 
 ---
 
+## [2026-07-02] v3.41.1: Content freshness pass, 13 whitepapers FR
+
+Deep-dive content audit (13 dedicated sub-agents, one per whitepaper, cross-referenced against CHANGELOG `[Unreleased]` and `machine-readable/`) found content drift the earlier version-only check missed, including two factually wrong claims. All 13 FR whitepapers (00-12) corrected, `version` field synced to 3.41.1, PDF and EPUB rebuilt for all.
+
+**Follow-up fix (same day):** the first content-correction pass bumped `version` and `wp-version` but left the `date` frontmatter field unchanged on 12 of 13 files (still April/May 2026), which drives the cover-page date via `date-format: "MMMM YYYY"`. 7 files also had a stale in-body "Version X.Y.Z | Month Year" footer stamp not synced by the fix agents (00, 01, 02, 03, 06, 09, 12; WP09's was the worst offender at "Version 3.27.6"). Bumped `date` to 2026-07-02 on all 13, corrected the 7 stale footer stamps, and rebuilt all 13 PDF+EPUB a second time to reflect the corrected cover date.
+
+### Fixed
+- **WP04 FR** (Architecture, v1.3.0 → v1.4.0): corrected a factually wrong claim, "sub-agents cannot spawn sub-agents (depth=1)" was outdated since v2.1.172 (up to 5 levels now). Updated the model table from Sonnet 4.6 to Sonnet 5 as default (native 1M context). Added Fable 5. Fixed footer version/date inconsistency.
+- **WP07 FR** (Guide Référence, v1.3.0 → v1.4.0): same "depth=1" factual error corrected. Added Sonnet 5 to the model table, Dynamic Workflows, references to 7 previously unlinked guide pages (agent-harness, memory-systems, hooks-events-reference, tools-reference, team-knowledge-base, practitioner-insights, agentic-tools). Series listing corrected from 12 to 13 whitepapers.
+- **WP02 FR** (Personnalisation, v1.4.0 → v1.5.0): fixed an internal contradiction, the doc correctly stated the commands→skills migration but its own "Structure Recommandée" and Git rules table still showed a separate `commands/` folder.
+- **WP09 FR** (Apprendre avec l'IA, v1.2.0 → v1.2.1): replaced the "Courbe d'Adoption Agentique" table, its 7 labels matched no table in the current guide (pre-existing drift, unrelated to recent guide changes).
+
+### Added
+- **WP00 FR** (Introduction, v1.4.0 → v1.5.0): series footer now lists all 13 whitepapers (was 12, WP12 missing; WP04/06/10 wrongly marked "à venir"). Corrected stats (26,496 lines, 181 templates) and feature table (Opus 4.8, Fable 5, `--safe-mode`, nested sub-agents).
+- **WP01 FR** (Prompts efficaces, v1.2.0 → v1.3.0): Thinking Modes section updated to Opus 4.8/Fable 5 and the 5-tier effort parameter (was binary Opus 4.5/4.6). Added a 5th context-engineering layer covering §9.26 Review-Driven Context Optimization (`crit`).
+- **WP03 FR** (Sécurité, v1.3.0 → v1.4.0): threat-db reference updated from v2.17.0 to v2.23.0. Added T030 TrustFall, T031 Shadow Escape, T032 Miasma Worm, T033 Agentjacking, and 4 CVEs (2026-50548/50549, 32871, 32625, 0621). Added experimental WASM MCP sandboxing (§7b) and `sandbox.credentials`.
+- **WP05 FR** (Équipe, v1.5.0 → v1.6.0): new "API Gateway & budgets centralisés" section (LiteLLM, virtual keys, model allowlists) and team-level log aggregation (Loki/Tempo/Grafana). Governance callout replaced with the 3 concrete config-propagation mechanisms now documented.
+- **WP06 FR** (Privacy, v1.2.0 → v1.3.0): audit checklist enriched with runnable shell commands. Added WASM MCP sandboxing and the June `/bug` command refactor clarification (no scrubbing before submission).
+- **WP08 FR** (Agent Teams, v1.4.0 → v1.5.0): new "Patterns d'Orchestration Avancés" section adapting the guide's 7 advanced patterns (Hub-and-Spoke, Programmatic Prerequisites, Dynamic Subagent Selection, Research Space Partitioning, Crash Recovery Manifest, Iterative Refinement Loop, Narrow Task Decomposition). Added 4 new IFTTD practitioner testimonials.
+- **WP10 FR** (Budget IA, v1.2.0 → v1.2.1): referenced api-gateway.md in the cost-control and governance callouts.
+- **WP11 FR** (Team Metrics, v1.0.1 → v1.1.0): new "Métriques Agentiques : Ce Que DORA Ne Mesure Pas" section (METR, DeputyDev, c-CRAB, Code Review Bench, Strata/Zenity studies), the self-hosted observability stack, and a PR Audit Trail reference.
+- **WP12 FR** (Agent Engineering, v1.0.0 → v1.1.0): added the 4 missing subsections of "Evaluating Probabilistic Systems" and a reference to Claude Code's native `agent()/parallel()/pipeline()` orchestration primitives (dynamic-workflows.md).
+
+---
+
 ## [2026-06-10] v3.40.0: WP11 FR frontmatter sync
 
 ### Fixed

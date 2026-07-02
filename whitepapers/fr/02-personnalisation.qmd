@@ -2,7 +2,7 @@
 title: "Personnaliser Claude"
 subtitle: "CLAUDE.md, Agents, Skills : votre assistant sur-mesure"
 author: "Florian BRUNIAUX"
-date: 2026-05-12
+date: 2026-07-02
 date-format: "MMMM YYYY"
 version: "3.41.1"
 wp-version: "1.5.0"
@@ -1434,7 +1434,7 @@ Overrides personnels de permissions (gitignored) :
 
 **Repository** : [github.com/FlorianBruniaux/claude-code-ultimate-guide](https://github.com/FlorianBruniaux/claude-code-ultimate-guide)
 
-*Version 3.40.0 | Avril 2026*
+*Version 3.41.1 | Juillet 2026*
 
 
 ---

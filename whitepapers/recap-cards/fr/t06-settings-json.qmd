@@ -4,9 +4,9 @@ subtitle: "Toutes les clés de configuration et leur portée"
 card-number: "T06"
 category: "Technique"
 difficulty: "intermediate"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "Mai 2026"
 layout: "two-col"
 lang: fr
@@ -30,16 +30,23 @@ format:
 
 ```json
 {
-  "model": "claude-sonnet-4-5",
+  "model": "claude-sonnet-5",
   "permissions": {
     "allow": ["Bash(git *)", "Bash(pnpm *)", "Read"],
     "deny":  ["Bash(rm -rf *)", "Write(file_path:*.env*)"],
-    "ask":   ["Bash(npm publish)"]
+    "ask":   ["Bash(npm publish)"],
+    "defaultMode": "acceptEdits",
+    "additionalDirectories": ["../shared-libs/"]
   },
   "env": {
     "NODE_ENV": "development",
     "LOG_LEVEL": "debug"
   },
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/statusline.sh"
+  },
+  "outputStyle": "Explanatory",
   "hooks": {
     "PostToolUse": [{
       "matcher": "Edit|Write",
@@ -58,8 +65,12 @@ format:
 | `permissions.allow` | Outils auto-approuvés |
 | `permissions.deny` | Outils bloqués |
 | `permissions.ask` | Outils avec confirmation |
+| `permissions.defaultMode` | Mode par défaut (default/acceptEdits/plan/bypassPermissions) |
+| `permissions.additionalDirectories` | Répertoires additionnels accessibles |
 | `env` | Variables d'environnement injectées |
 | `hooks` | Scripts déclenchés sur événements |
+| `statusLine` | Ligne de statut personnalisée |
+| `outputStyle` | Style de communication (Default/Explanatory/Learning) |
 | `spinnerVerbs` | Mots dans le spinner de chargement |
 | `spinnerTipsOverride` | Conseils affichés pendant le traitement |
 | `enableAllProjectMcpServers` | Active tous les serveurs MCP du projet |
@@ -89,4 +100,4 @@ format:
 .env.local                    # Secrets
 ```
 
-Les fichiers à committer (`settings.json`, `agents/`, `commands/`, `hooks/`, `rules/`) représentent la configuration d'équipe partagée. Ne jamais inclure de clés API ou de tokens dans ces fichiers.
+Les fichiers à committer (`settings.json`, `agents/`, `skills/`, `hooks/`, `rules/`) représentent la configuration d'équipe partagée. Ne jamais inclure de clés API ou de tokens dans ces fichiers.

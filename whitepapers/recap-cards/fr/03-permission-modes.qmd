@@ -3,11 +3,11 @@ title: "Modes de Permission"
 subtitle: "Contrôle des accès outils — du plus sûr au plus permissif"
 card-number: "T03"
 category: "Technique"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 difficulty: "beginner"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
-wp-version: "1.1.0"
+version: "3.41.1"
+wp-version: "1.1.1"
 date: "Mai 2026"
 layout: "two-col"
 lang: fr
@@ -17,15 +17,18 @@ format:
 
 ## Modes Disponibles
 
-| Mode | Flag | Usage recommandé |
-|------|------|-----------------|
-| **Default** | _(aucun)_ | Développement quotidien |
-| **Auto-accept edits** | `Shift+Tab` | Revues de code |
-| **Auto-accept all** | `Shift+Tab x2` | Tâches répétitives connues |
-| **Bypass total** | `--dangerously-skip-permissions` | CI/CD headless |
-| **Moins de prompts** | `/less-permission-prompts` | Réduire les confirmations (v2.1.111) |
+| Mode | Nom canonique | Activation | Usage recommandé |
+|------|---------------|-----------|-----------------|
+| **Default** | `default` | _(aucun)_ | Développement quotidien |
+| **Auto-accept edits** | `acceptEdits` | `Shift+Tab` | Revues de code |
+| **Plan** | `plan` | `Shift+Tab x2` ou `/plan` | Analyse sans modification |
+| **Auto (classifier IA)** | `auto` | `permissions.defaultMode: "auto"` | Tâches longues, moins d'interruptions |
+| **Bypass total** | `bypassPermissions` | `--dangerously-skip-permissions` | CI/CD headless, sandboxé |
+| **Moins de prompts** | — | `/less-permission-prompts` | Génère un allowlist à partir des transcripts (v2.1.111) |
 
-**Note :** `--dangerously-skip-permissions` skippe aussi le répertoire `.claude/` (v2.1.121). Sur les abonnements Max, le mode Auto réduit automatiquement les confirmations de permissions (v2.1.111).
+**Activation en CLI :** `claude --permission-mode <mode>` accepte `default`, `plan`, `acceptEdits`, `bypassPermissions`. **Activation persistante :** clé `permissions.defaultMode` dans `settings.json`.
+
+**Note :** `--dangerously-skip-permissions` skippe aussi le répertoire `.claude/` (v2.1.121). Le mode `auto` s'appuie sur un modèle classifieur qui évalue chaque appel d'outil avant exécution — friction en moins, pas une frontière de sécurité.
 
 ## Whitelist d'Outils
 
