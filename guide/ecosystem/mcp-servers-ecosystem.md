@@ -6,7 +6,7 @@ tags: [mcp, reference, integration]
 
 # MCP Servers Ecosystem
 
-**Last updated**: May 2026 • **Next review**: June 2026
+**Last updated**: July 2026 • **Next review**: August 2026
 
 This guide covers validated community MCP servers beyond the official Anthropic servers. All servers listed have been evaluated for production readiness, maintenance activity, and security.
 
@@ -24,6 +24,7 @@ This guide covers validated community MCP servers beyond the official Anthropic 
   - [Code Search & Analysis](#code-search--analysis)
   - [Documentation & Knowledge](#documentation--knowledge)
   - [Project Management](#project-management)
+  - [Customer Support & CRM](#customer-support--crm)
   - [Orchestration](#orchestration)
 - [Production Deployment](#production-deployment)
 - [Monthly Watch Methodology](#monthly-watch-methodology)
@@ -1177,6 +1178,60 @@ Result: Status changed
 
 ---
 
+### Customer Support & CRM
+
+#### HubSpot MCP
+
+**Community servers** exposing the HubSpot API (contacts, companies, deals, engagements) to Claude Code. No official Anthropic or HubSpot-published server exists as of this writing; the `modelcontextprotocol/servers` registry does not list one.
+
+**Use Case**: A support or CSM agent reads live account data (plan, ticket history, deal stage) without the human switching tabs, or drafts a reply informed by the client's actual CRM record. See [support-csm-agent.md](../workflows/support-csm-agent.md) for the full pattern this connects to.
+
+Two servers stand out from the community field:
+
+| Server | Coverage | Notes |
+|--------|----------|-------|
+| **shinzo-labs/hubspot-mcp** | Contacts, companies, leads, deals, products, engagements, batch operations, associations (read/write) | Broadest object coverage, tagged releases (v2.0.5+) |
+| **baryhuang/mcp-hubspot** | Contacts, companies (read/write), conversation retrieval, semantic search over cached data | Highest star count of the field; formerly published as `peakmojo/mcp-hubspot` |
+
+**Setup** (shinzo-labs/hubspot-mcp):
+
+```bash
+claude mcp add hubspot -- npx -y @shinzo-labs/hubspot-mcp --api-key YOUR_HUBSPOT_PRIVATE_APP_TOKEN
+```
+
+**Quality Score**: **6.5/10** ⭐⭐⭐
+
+**Note**: Community-maintained, single-maintainer projects. Scope the private app token to read-only where the use case allows it (see [support-csm-agent.md](../workflows/support-csm-agent.md#security--guardrails) for the least-privilege rationale). Several smaller HubSpot MCP servers exist beyond these two (LokiMCPUniverse, bajwa61, v4lheru); they were evaluated and skipped for low star counts and stale commits (11+ months).
+
+**Resources**:
+- **GitHub**: https://github.com/shinzo-labs/hubspot-mcp
+- **GitHub (alt)**: https://github.com/baryhuang/mcp-hubspot
+- **HubSpot API Docs**: https://developers.hubspot.com/docs/api/overview
+
+---
+
+#### Zendesk MCP
+
+**Community server** for Zendesk (tickets, comments, Help Center articles).
+
+**Use Case**: A support agent checks ticket status or pulls a client's ticket history without leaving the agent context, same pattern as the Linear MCP use case above but for a helpdesk instead of an issue tracker.
+
+**Setup**:
+
+```bash
+claude mcp add zendesk -- npx -y zendesk-mcp-server --subdomain YOUR_SUBDOMAIN --email YOUR_EMAIL --token YOUR_API_TOKEN
+```
+
+**Quality Score**: **6.8/10** ⭐⭐⭐
+
+**Note**: Community-maintained (`reminia/zendesk-mcp-server`), most recently updated of the Zendesk community options at evaluation time. A handful of smaller alternatives exist (mattcoatsworth, michaelrice, wlaubernds); this is the one with the healthiest activity level.
+
+**Resources**:
+- **GitHub**: https://github.com/reminia/zendesk-mcp-server
+- **Zendesk API Docs**: https://developer.zendesk.com/api-reference/
+
+---
+
 ### Orchestration
 
 #### MCP-Compose
@@ -1909,17 +1964,18 @@ Servers evaluated but not included in the validated list:
 | **Code Search/Analysis** | 1 (Grepai) | Semantic search, call graph analysis |
 | **Documentation/Knowledge** | 1 (Context7) | API reference, code examples |
 | **Project Management** | 1 (Linear) | Issue tracking, sprint planning |
+| **Customer Support & CRM** | 2 (HubSpot, Zendesk) | Ticket triage, account diagnosis, CSM briefing |
 | **Orchestration** | 1 (MCP-Compose) | Multi-server management |
 
 ### Maintainer Types
 
 - **Official Servers** (6): Playwright (Microsoft), Browserbase, Semgrep, Context7, Kubernetes (Red Hat), Chrome DevTools (Anthropic)
-- **Community Servers** (4): Linear, Vercel, MCP-Compose, Grepai (well-designed, actively maintained)
+- **Community Servers** (6): Linear, Vercel, MCP-Compose, Grepai, HubSpot, Zendesk (well-designed, actively maintained)
 
 ---
 
-**Last updated**: May 2026
-**Next review**: June 2026
+**Last updated**: July 2026
+**Next review**: August 2026
 **Maintainer**: Claude Code Ultimate Guide Team
 
 ---

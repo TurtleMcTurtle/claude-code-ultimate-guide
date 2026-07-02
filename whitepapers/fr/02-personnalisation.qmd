@@ -4,8 +4,8 @@ subtitle: "CLAUDE.md, Agents, Skills : votre assistant sur-mesure"
 author: "Florian BRUNIAUX"
 date: 2026-05-12
 date-format: "MMMM YYYY"
-version: "3.41.0"
-wp-version: "1.4.0"
+version: "3.41.1"
+wp-version: "1.5.0"
 series: "Claude Code Ultimate Guide"
 format:
   whitepaper-typst:

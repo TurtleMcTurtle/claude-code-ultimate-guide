@@ -4,7 +4,7 @@
 # Purpose: Condensed index for LLMs to quickly answer user questions about Claude Code
 
 version: "3.41.1"
-updated: "2026-06-10"
+updated: "2026-07-02"
 
 # ════════════════════════════════════════════════════════════════
 # DEEP DIVE - Line numbers in guide/ultimate-guide.md
@@ -63,6 +63,7 @@ deep_dive:
   codebase_audit_scoring: "examples/skills/audit-codebase/SKILL.md"  # Pattern #9: 7-category scoring (Variant Systems)
   codebase_audit_scoring_note: "Since CC 2.1.3: equivalent skill uses disable-model-invocation: true in .claude/skills/"
   event_driven_agents: "guide/workflows/event-driven-agents.md"  # Pattern #8: Linear/GitHub/Jira webhook→agent
+  support_csm_agent: "guide/workflows/support-csm-agent.md"  # Internal support/CSM agent: L0-L5 maturity model, HubSpot/Zendesk/Linear via MCP, read-only DB diagnosis
   worktree_dependency_management: "guide/ultimate-guide.md:15180"  # Pattern #6: manual analysis, no auto-detection
   deployment_automation: "guide/ultimate-guide.md:13172"          # Pattern #10: Vercel + Infisical guardrails
   iterative_refinement_community: "guide/workflows/iterative-refinement.md:515"  # Pattern #7: Ralph Loop + Auto-Continue

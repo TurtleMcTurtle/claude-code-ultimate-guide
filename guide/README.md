@@ -111,6 +111,7 @@ Hands-on guides for effective development patterns:
 | [workflows/agent-teams-quick-start.md](./workflows/agent-teams-quick-start.md) | Quick start guide for agent team patterns |
 | [workflows/dual-instance-planning.md](./workflows/dual-instance-planning.md) | Dual-instance planning: Opus plans, Sonnet executes |
 | [workflows/event-driven-agents.md](./workflows/event-driven-agents.md) | Event-driven agent coordination patterns |
+| [workflows/support-csm-agent.md](./workflows/support-csm-agent.md) | Internal support/CSM agent: ticket triage, DB diagnosis, CRM via MCP |
 | [workflows/plan-pipeline.md](./workflows/plan-pipeline.md) | End-to-end plan pipeline: start, validate, execute |
 | [workflows/design-to-code.md](./workflows/design-to-code.md) | Convert Figma/wireframes to working code |
 | [workflows/exploration-workflow.md](./workflows/exploration-workflow.md) | Systematically explore unfamiliar codebases |

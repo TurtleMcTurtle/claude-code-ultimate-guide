@@ -4,8 +4,8 @@ subtitle: "Synthèse complète + workflows avancés"
 author: "Florian BRUNIAUX"
 date: 2026-05-12
 date-format: "MMMM YYYY"
-version: "3.41.0"
-wp-version: "1.3.0"
+version: "3.41.1"
+wp-version: "1.4.0"
 series: "Claude Code Ultimate Guide"
 format:
   whitepaper-typst:
@@ -511,6 +511,8 @@ En complément des CLAUDE.md d'instructions, Claude Code dispose d'un système d
 | `user` | `~/.claude/MEMORY.md` | Tous vos projets |
 | `project` | `.claude/MEMORY.md` | Ce projet (versionnable) |
 | `local` | `.claude/MEMORY.local.md` | Ce projet, vous seul (gitignored) |
+
+*→ Guide canonique complet (partage d'équipe, multi-agent, risques de memory poisoning) : `guide/core/memory-systems.md`*
 
 ## Ordre de Lecture
 
@@ -1366,12 +1368,13 @@ Configuration complète (à placer dans `.claude/settings.json`) :
 
 ## Événements Hook Disponibles
 
-Le système de hooks s'est enrichi de nouveaux événements entre v2.1.32 et v2.1.76. Les deux événements fondamentaux (`PreToolUse`, `PostToolUse`) restent les plus utilisés, mais les nouveaux événements couvrent désormais les worktrees, les agents teammates, et les interactions MCP.
+Le système de hooks compte désormais **30 événements** au total. Référence complète : `guide/core/hooks-events-reference.md`. Les deux événements fondamentaux (`PreToolUse`, `PostToolUse`) restent les plus utilisés, mais les nouveaux événements couvrent désormais les worktrees, les agents teammates, les batches parallèles et les interactions MCP.
 
 | Événement | Déclencheur | Version |
 |-----------|-------------|---------|
 | `PreToolUse` | Avant l'appel à n'importe quel outil | Core |
 | `PostToolUse` | Après l'appel à n'importe quel outil | Core |
+| `PostToolBatch` | Après résolution complète d'un batch d'appels parallèles | v2.1.x |
 | `Notification` | Quand Claude envoie une notification | Core |
 | `Stop` | Quand Claude termine une réponse | Core |
 | `SubagentStop` | Quand un sub-agent termine | Core |
@@ -1386,6 +1389,8 @@ Le système de hooks s'est enrichi de nouveaux événements entre v2.1.32 et v2.
 | `FileChanged` | Quand un fichier est modifié | v2.1.83 |
 | `TaskCreated` | Quand une nouvelle tâche est créée | v2.1.84 |
 | `PermissionDenied` | Quand le classifieur auto-mode refuse un appel outil ; retourner `{"retry": true}` pour réessayer | v2.1.88 |
+| `UserPromptExpansion` | Quand une slash command s'étend en prompt | v2.1.x |
+| `MessageDisplay` | Pendant le streaming du texte de la réponse assistant (timeout 10s) | v2.1.x |
 
 **Exemple d'usage: PostCompact pour sauvegarder le contexte**
 
@@ -1537,6 +1542,8 @@ Trois modèles de déploiement coexistent selon la taille de l'équipe et le niv
 ## Configuration Équipe Type
 
 Trois fichiers constituent la configuration minimale d'une équipe : un CLAUDE.md projet versionné (conventions partagées), des hooks partagés (automatisation et sécurité), et une liste de serveurs MCP standardisés. Cette triade élimine les 90% de divergences entre membres d'équipe.
+
+Pour une base de connaissance d'équipe plus structurée (vault Markdown, connecteurs MCP, RAG), voir `guide/ecosystem/team-knowledge-base.md`.
 
 ### 1. CLAUDE.md Projet (versionné)
 
@@ -1707,7 +1714,7 @@ You: "What did the research find?"
 | Génération de tests | Review/debug code principal |
 | Documentation scraping | Planifier architecture |
 
-**Limitation** : Max depth=1 (pas de sub-agents de sub-agents).
+**Depth** : depuis v2.1.172, les sub-agents peuvent spawner leurs propres sub-agents, jusqu'à 5 niveaux de profondeur.
 
 ## Agent Teams (depuis v2.1.32)
 
@@ -1742,6 +1749,16 @@ Workflow:
 - Projets full-stack (frontend + backend + infra) | Revues multi-perspectives | Refactoring complexe
 
 **Éviter** : Tâches simples (overhead injustifié) | Budgets limités | Itérations rapides (coordination ralentit)
+
+## Dynamic Workflows (mot-clé `ultracode`, depuis v2.1.154)
+
+*→ Pour approfondir : `guide/workflows/dynamic-workflows.md`*
+
+**But** : Orchestrer des dizaines à des centaines de sub-agents en arrière-plan via un script JavaScript (primitives `agent`, `parallel`, `pipeline`, `phase`). L'orchestrateur lui-même ne consomme aucun token, seuls les appels `agent()` coûtent. Monitoring via `/workflows`.
+
+**Breaking change** : le mot-clé déclencheur était `workflow` jusqu'à v2.1.160, renommé `ultracode` (les scripts existants utilisant l'ancien mot-clé doivent être mis à jour).
+
+**Quand l'utiliser** : tâche multi-étapes avec plusieurs stages qui s'enchaînent, parallélisation possible, job assez long pour que la reprise sur interruption compte, ou besoin de schémas structurés entre étapes. Pour un sub-agent unique, préférer l'Agent tool. Pour une procédure réutilisable où Claude choisit les étapes, préférer un Skill.
 
 ## Auto-Memories (depuis v2.1.32)
 
@@ -1962,6 +1979,12 @@ Ces commandes ont été ajoutées progressivement entre v2.1.71 et v2.1.77. Elle
 | `/ultrareview` | Review de code multi-agents en parallèle, cloud-based (branche locale ou PR GitHub) | v3.39.1 |
 | `/less-permission-prompts` | Génère automatiquement une allowlist depuis l'historique des transcripts | v3.39.1 |
 | `/usage` | Commande unifiée : coûts, stats et graphiques de la session (remplace `/cost` et `/stats`) | v2.1.118 |
+| `/cd <path>` | Changer de répertoire de travail en cours de session | v2.1.169 |
+| `/config key=value` | Syntaxe inline pour modifier un setting sans passer par le menu | v2.1.181 |
+
+::: {.callout-note title="Autres ajouts notables v2.1.153 → v2.1.197"}
+`--safe-mode` (ou `CLAUDE_CODE_SAFE_MODE`) force une validation maximale avant chaque action (v2.1.169). `fallbackModel` dans `settings.json` permet de définir jusqu'à 3 modèles de secours en cas d'indisponibilité (v2.1.166). `sandbox.credentials` bloque la lecture des credentials depuis le sandbox (v2.1.187, ⭐ sécurité). `enforceAvailableModels` restreint les modèles utilisables au niveau organisation (v2.1.175, renforcé en v2.1.187). `claude mcp login` / `claude mcp logout <name>` gèrent l'authentification MCP en ligne de commande (v2.1.186). La syntaxe de permission `Tool(param:value)` (ex: `Agent(model:opus)`) permet un contrôle fin par paramètre (v2.1.178). Depuis v2.1.183, le mode Auto bloque nativement les opérations git/terraform destructives (`reset --hard`, `checkout -- .`, `clean -fd`, `commit --amend` sur commits externes).
+:::
 | `/proactive` | Mode proactif : Claude anticipe et suggère des actions sans attendre | v2.1.105 |
 | `/team-onboarding` | Génère un guide d'onboarding personnalisé pour l'équipe | v2.1.106 |
 | `/undo` | Alias de `/rewind` : annule la dernière action de Claude | v2.1.108 |
@@ -1982,11 +2005,13 @@ Ces commandes ont été ajoutées progressivement entre v2.1.71 et v2.1.77. Elle
 
 | Modèle | Alias `/model` | Coupure connaissance |
 |--------|---------------|----------------------|
+| **Claude Sonnet 5** (défaut depuis v2.1.197) | `sonnet` | Janvier 2026 |
 | Claude Fable 5 | `claude-fable-5` | Juin 2026 |
-| Claude Sonnet 4.6 | `sonnet` | Août 2025 |
 | Claude Opus 4.8 | `opus` | Actuel |
 | Claude Opus 4.6 | (génération précédente) | Mai 2025 |
 | Claude Haiku 4.5 | `haiku` | Fév. 2025 |
+
+Claude Sonnet 5 (v2.1.197, 30 juin 2026) devient le modèle par défaut de Claude Code, avec une fenêtre de contexte native de 1M tokens (pas d'extension à activer) et un tarif promotionnel de $2/$10 par Mtok jusqu'au 31 août.
 
 ## Raccourcis Clavier
 
@@ -2183,6 +2208,20 @@ Selon votre objectif immédiat, vous n'avez pas besoin de lire les 9 whitepapers
 | **Community Examples** | Exemples communautaires validés Anthropic | [github.com/anthropics/claude-code-examples](https://github.com/anthropics/claude-code-examples) |
 | **Claude Code Action** | GitHub Action officielle pour CI/CD | [github.com/anthropics/claude-code-action](https://github.com/anthropics/claude-code-action) |
 
+## Pages Guide Complémentaires
+
+Sept pages du guide principal détaillent des sujets condensés dans ce livre blanc. Consultez-les directement pour l'approfondissement.
+
+| Page | Contenu |
+|------|---------|
+| `guide/core/agent-harness.md` | Agent Harness Engineering : 9 composants, lethal trifecta, CI/CD agentic, digital twin |
+| `guide/core/memory-systems.md` | Guide canonique mémoire : scopes cross-session, partage d'équipe, multi-agent, risques de memory poisoning |
+| `guide/core/hooks-events-reference.md` | Référence complète des 30 événements hooks disponibles |
+| `guide/core/tools-reference.md` | Référence des 40 outils natifs Claude Code |
+| `guide/ecosystem/team-knowledge-base.md` | Infrastructure de connaissance d'équipe : vault Markdown, connecteurs MCP, RAG |
+| `guide/ecosystem/practitioner-insights.md` | 22 insights terrain issus de 11 épisodes IFTTD |
+| `guide/ecosystem/agentic-tools.md` | Comparatif Codex CLI, Hermes Agent, Aider, Devin, SWE-agent, CrewAI, LangGraph, AutoGen + matrice de décision |
+
 ## Outils Complémentaires
 
 Ces outils s'intègrent avec Claude Code via MCP ou slash commands pour étendre ses capacités dans des domaines spécifiques : spécifications, contrats API, et documentation.
@@ -2211,7 +2250,7 @@ Le Discord officiel Anthropic est le canal le plus rapide pour obtenir de l'aide
 
 *Ce Guide de Référence synthétise les 7 whitepapers de la série Claude Code Ultimate Guide et ajoute du contenu inédit sur la migration, l'intégration IDE, Git, les patterns avancés et les méthodologies de développement.*
 
-*Version 3.40.0 --- Avril 2026 (mis à jour : niveau d'effort `xhigh` Opus 4.7, auto mode Max sans flag, `/ultrareview`, `/less-permission-prompts`, glob read-only sans prompt)*
+*Version 3.41.1 --- Juillet 2026 (mis à jour : Claude Sonnet 5 modèle par défaut, sub-agents 5 niveaux de profondeur, Dynamic Workflows `ultracode`)*
 
 ---
 
@@ -2235,7 +2274,7 @@ Le Discord officiel Anthropic est le canal le plus rapide pour obtenir de l'aide
 
 Ce livre blanc fait partie de la série **Claude Code Ultimate Guide**, une ressource complète pour maîtriser Claude Code, de l'installation au déploiement en production.
 
-**12 livres blancs dans la série :**
+**13 livres blancs dans la série :**
 
 - **WP00** Introduction & Fondamentaux
 - **WP01** Prompts Efficaces
@@ -2249,5 +2288,6 @@ Ce livre blanc fait partie de la série **Claude Code Ultimate Guide**, une ress
 - **WP09** Apprendre avec l'IA (UVAL)
 - **WP10** Budget IA & ROI *(à venir)*
 - **WP11** Piloter une Équipe à l'Ère de l'IA
+- **WP12** L'Ingénierie Logicielle à l'Ère des Agents Autonomes
 
 Série complète disponible sur [cc.bruniaux.com/whitepapers/](https://cc.bruniaux.com/whitepapers/)
