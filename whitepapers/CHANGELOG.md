@@ -11,6 +11,35 @@ Suivi des versions des ebooks, indépendamment de la version du guide.
 
 ---
 
+## [2026-07-03] v3.41.1: Content freshness pass, 14 EN recap cards
+
+Same audit as the FR recap-cards pass of July 2 (dead `settings.json` keys checked against `guide/core/settings-reference.md`, `.claude/commands/` references vs the CC 2.1.3 skills merge, invented CLI flags checked against `claude --help`), applied to all 57 EN cards. Every problem fixed in FR was also present in EN. The pass additionally surfaced 6 findings the FR audit missed, all still present in the FR counterparts: the fictitious `--no-stream` CLI flag (01, t02), the fictitious `--task-manage` flag presented as a native CC feature "since v2.1.19" (m07, it is a SuperClaude framework flag), the non-existent `{"vim": true}` settings key (01, real key is `editorMode: "vim"`), `spinnerVerbs.mode: "add"` (t06, valid values are `replace`/`append`), the non-existent `sandbox.network.policy` key (t16), and a settings-style `allowedTools:` snippet (c08). 14 EN cards fixed, `guide-version`/`version` synced to 3.41.1, all 14 PDFs rebuilt.
+
+### Fixed
+- **01-commandes-essentielles EN**: fictitious `claude --context CLAUDE.md` replaced with the auto-load note + in-session `@file` pattern; `--no-stream` tip replaced with the real `--verbose` flag / `Ctrl+O` toggle; `{"vim": true}` corrected to `/vim` or `{"editorMode": "vim"}`.
+- **03-permission-modes EN**: modes table rewritten with canonical names (`default`/`acceptEdits`/`plan`/`auto`/`bypassPermissions`), the wrong "Auto-accept all via Shift+Tab x2" row replaced by Plan mode, `/less-permission-prompts` row and `--permission-mode` / `permissions.defaultMode` activation notes added.
+- **04-context-management EN**: `--context` flag removed from the context-sources list and the examples, replaced with `.claude/rules/*.md` auto-loading.
+- **c03-xml-prompting-anchors EN**: `.claude/commands/` reference updated to `.claude/skills/`.
+- **c06-configuration-decision-guide EN**: top-level `"allowedTools"` key replaced with `permissions.allow`.
+- **c08-surface-attaque-menaces EN**: `allowedTools:` snippet replaced with `permissions.allow:`.
+- **m07-todowrite-vs-tasks-api EN**: fictitious `--task-manage` flag section replaced with the real default-on behavior (Tasks API default since v2.1.142, `CLAUDE_CODE_ENABLE_TASKS=0` to revert); wrong "enabled by default since v2.1.19" comment corrected.
+- **m11-hooks-evenements-systeme EN**: `SessionEnd` and `PreCompact` rows added to the main events table.
+- **t02-mode-non-interactif EN**: entire `--no-stream` section rewritten, print mode already writes the complete response in one block, real-time streaming is opt-in via `--output-format stream-json`.
+- **t04-permissions-glob-patterns EN**: 3 `autoApproveTools` blocks replaced with `permissions.allow`.
+- **t06-settings-json EN**: model example bumped to `claude-sonnet-5`; `permissions.defaultMode`, `permissions.additionalDirectories`, `statusLine`, `outputStyle` added to the JSON example and keys table; `mode: "add"` corrected to `mode: "append"`; `commands/` updated to `skills/` in the commit list.
+- **t09-workspace-hygiene EN**: `.claude/` tree and commit list updated for the commands/skills merge.
+- **t10-config-multi-machine EN**: `commands/` removed from the shareable table, symlink setup, git add, and cron backup examples (4 spots).
+- **t16-sandbox-natif-architecture EN**: non-existent `sandbox.network.policy` key removed; allowlist/blocklist explained via the real `allowedDomains`/`deniedDomains` keys.
+
+---
+
+## [2026-07-03] v3.41.1: WP03 FR stale malicious-author/skill counters
+
+### Fixed
+- **WP03 FR** (Sécurité, v1.4.0 → v1.4.1): the July 2 EN pass had flagged stale malicious-author/skill counts as affecting both languages, but only the EN file got the fix. FR still claimed 5 confirmed authors and 314+/341+ malicious skills. Corrected against `threat-db.yaml` v2.23.0: 6 confirmed authors (sakaen736jih added), hightower6eu alone at 677 VirusTotal-confirmed skills, ClawHavoc campaign grown from 341 to 1,184+ confirmed entries by March 1, 2026. PDF and EPUB rebuilt.
+
+---
+
 ## [2026-07-02] v3.41.1: Content freshness pass, 13 whitepapers EN
 
 Same deep-dive audit and fix method applied to FR (13 dedicated sub-agents, one per whitepaper) extended to the EN series after FR/EN drift was flagged. Same class of gaps confirmed present in EN: WP04 and WP07 had the identical "sub-agents cannot spawn sub-agents (depth=1)" factual error, WP08 was missing the same 450-line Advanced Orchestration Patterns section, WP11 was missing the same Agentic Metrics section, WP12 was missing the same 4 evaluation subsections. Every fix was independently verified line-by-line post-edit (not just a version-field bump) after an earlier FR fix pass on WP00 was found to have missed its series-list correction despite a clean version bump. All 13 EN whitepapers corrected, PDF+EPUB rebuilt. `whitepapers/en/05-team.qmd` confirmed untracked by git (blanket `whitepapers/` gitignore rule, unlike sibling files), flagged but not fixed in this pass.

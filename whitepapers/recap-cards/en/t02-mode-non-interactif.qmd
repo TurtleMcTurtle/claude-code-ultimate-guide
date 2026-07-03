@@ -4,9 +4,9 @@ subtitle: "Using Claude Code without human interaction: scripts, CI, pipes"
 card-number: "T02"
 category: "Technical"
 difficulty: "intermediate"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "May 2026"
 layout: "two-col"
 lang: en
@@ -46,12 +46,12 @@ git status --short | claude -p "Categorize the changes" \
 cat report.txt | claude -p "Summarize" --output-format stream-json
 ```
 
-## `--no-stream` and flow control
+## Flow control in pipes
 
-By default, Claude Code streams the response character by character. `--no-stream` waits for the complete response before displaying anything, which simplifies pipes with tools that expect complete input.
+In print mode, `claude -p` waits for the complete response and writes it to stdout in a single block, which simplifies pipes with tools that expect complete input. Real-time streaming is opt-in via `--output-format stream-json`.
 
 ```bash
-claude -p "Generate a report" --no-stream > report.md
+claude -p "Generate a report" > report.md
 ```
 
 ## CI/CD usage

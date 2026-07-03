@@ -4,9 +4,9 @@ subtitle: "Automatically react to Claude Code actions"
 card-number: "M11"
 category: "Methodology"
 difficulty: "intermediate"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "May 2026"
 layout: "two-col"
 lang: en
@@ -23,9 +23,11 @@ A hook is a shell script (or any command) executed automatically when Claude Cod
 | Event | Moment | Can block |
 |-------|--------|-----------|
 | `SessionStart` | Startup or resume | No |
+| `SessionEnd` | Session ends | No |
 | `UserPromptSubmit` | Before prompt processing | Yes |
 | `PreToolUse` | Before a tool call | Yes |
 | `PostToolUse` | After a tool succeeds | No |
+| `PreCompact` | Before context compaction | Yes |
 | `Notification` | Claude sends a notification | No |
 | `Stop` | Claude finishes responding | Yes |
 | `SubagentStop` | A sub-agent ends | Yes |

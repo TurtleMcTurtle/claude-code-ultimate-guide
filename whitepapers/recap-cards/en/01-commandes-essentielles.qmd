@@ -3,10 +3,10 @@ title: "Essential Commands"
 subtitle: "Keyboard shortcuts & indispensable slash commands"
 card-number: "T01"
 category: "Technical"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 difficulty: "beginner"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "May 2026"
 layout: "two-col"
 lang: en
@@ -52,8 +52,9 @@ claude --allowedTools "Edit,Read,Bash"
 # Launch Claude Code
 claude
 
-# With context file
-claude --context CLAUDE.md
+# CLAUDE.md is loaded automatically at startup
+# To add a file during the session:
+@src/auth.ts Look at this function
 
 # Non-interactive mode (scripts)
 claude -p "Analyze this file" < input.txt
@@ -90,8 +91,8 @@ claude --continue
 
 ## Essential Tips
 
-**Verbosity control** — Use `--no-stream` to see the full response at once.
+**Verbosity control** — Use `--verbose` at launch, or `Ctrl+O` in session, to see the full turn-by-turn transcript.
 
 **Multiline** — `Shift+Enter` in the terminal to add a new line without submitting.
 
-**Vim mode** — Add `{"vim": true}` to `~/.claude/settings.json` for Vim keybindings.
+**Vim mode** — Run `/vim` in session, or add `{"editorMode": "vim"}` to `~/.claude/settings.json`.

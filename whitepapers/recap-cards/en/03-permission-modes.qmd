@@ -3,10 +3,10 @@ title: "Permission Modes"
 subtitle: "Tool access control — from safest to most permissive"
 card-number: "T03"
 category: "Technical"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 difficulty: "beginner"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "May 2026"
 layout: "two-col"
 lang: en
@@ -16,12 +16,18 @@ format:
 
 ## Available Modes
 
-| Mode | Flag | Recommended use |
-|------|------|-----------------|
-| **Default** | _(none)_ | Daily development |
-| **Auto-accept edits** | `Shift+Tab` | Code reviews |
-| **Auto-accept all** | `Shift+Tab x2` | Known repetitive tasks |
-| **Full bypass** | `--dangerously-skip-permissions` | Headless CI/CD |
+| Mode | Canonical name | Activation | Recommended use |
+|------|---------------|-----------|-----------------|
+| **Default** | `default` | _(none)_ | Daily development |
+| **Auto-accept edits** | `acceptEdits` | `Shift+Tab` | Code reviews |
+| **Plan** | `plan` | `Shift+Tab x2` or `/plan` | Analysis without modification |
+| **Auto (AI classifier)** | `auto` | `permissions.defaultMode: "auto"` | Long tasks, fewer interruptions |
+| **Full bypass** | `bypassPermissions` | `--dangerously-skip-permissions` | Headless CI/CD, sandboxed |
+| **Fewer prompts** | — | `/less-permission-prompts` | Generates an allowlist from transcripts (v2.1.111) |
+
+**CLI activation:** `claude --permission-mode <mode>` accepts `default`, `plan`, `acceptEdits`, `bypassPermissions`. **Persistent activation:** `permissions.defaultMode` key in `settings.json`.
+
+**Note:** `--dangerously-skip-permissions` also skips the `.claude/` directory (v2.1.121). The `auto` mode relies on a classifier model that evaluates each tool call before execution, less friction, not a security boundary.
 
 ## Tool Whitelist
 

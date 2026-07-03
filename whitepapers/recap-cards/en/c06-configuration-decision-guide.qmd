@@ -4,9 +4,9 @@ subtitle: "Which configuration mechanism to use based on the situation"
 card-number: "C06"
 category: "Design"
 difficulty: "intermediate"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "May 2026"
 layout: "two-col"
 lang: en
@@ -40,7 +40,9 @@ The best practice comes down to a simple distinction: what belongs to the team g
 // .claude/settings.json (team, versioned)
 {
   "hooks": { "PreToolUse": [...] },
-  "allowedTools": ["Edit", "Read", "Bash"]
+  "permissions": {
+    "allow": ["Edit", "Read", "Bash"]
+  }
 }
 ```
 

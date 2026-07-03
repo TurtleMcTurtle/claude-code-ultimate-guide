@@ -4,9 +4,9 @@ subtitle: "How Claude Code isolates its operations at the OS level"
 card-number: "T16"
 category: "Technical"
 difficulty: "advanced"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "May 2026"
 layout: "two-col"
 lang: en
@@ -59,13 +59,12 @@ To restrict reading of sensitive directories (SSH, cloud credentials), use `perm
 
 All network connections from sandboxed commands go through a SOCKS5 proxy running outside the sandbox. The proxy applies domain-based filtering without inspecting traffic content (no deep packet inspection).
 
-Configuration: `deny` mode (block everything except allowlist) or `allow` mode (allow everything except blocklist).
+Configuration: allowlist via `sandbox.network.allowedDomains` (everything else is blocked) or blocklist via `sandbox.network.deniedDomains` (allow everything except listed domains).
 
 ```json
 {
   "sandbox": {
     "network": {
-      "policy": "deny",
       "allowedDomains": ["api.anthropic.com", "*.npmjs.org", "github.com"]
     }
   }

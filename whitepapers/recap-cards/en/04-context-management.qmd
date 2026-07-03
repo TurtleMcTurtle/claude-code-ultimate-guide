@@ -3,10 +3,10 @@ title: "Context Management"
 subtitle: "Managing the context window for efficient sessions"
 card-number: "M02"
 category: "Methodology"
-guide-version: "3.41.0"
+guide-version: "3.41.1"
 difficulty: "beginner"
 author: "Florian BRUNIAUX"
-version: "3.41.0"
+version: "3.41.1"
 date: "May 2026"
 layout: "two-col"
 lang: en
@@ -29,8 +29,8 @@ format:
 1. ~/.claude/CLAUDE.md       Global rules
 2. ./CLAUDE.md               Project rules (root)
 3. subfolder/CLAUDE.md       Local rules (cumulative)
-4. @file                     Explicit inline import
-5. --context flag            File passed via CLI
+4. .claude/rules/*.md        Rules auto-loaded at startup
+5. @file                     Explicit inline import (in session)
 ```
 
 ## Management Commands
@@ -51,8 +51,8 @@ format:
 # Via CLAUDE.md (persistent)
 Always read package.json before working on deps.
 
-# Via --context (session)
-claude --context "We use TypeScript strict mode"
+# Via .claude/rules/ (auto-loaded at startup)
+Rules scoped by path (paths:) or global
 ```
 
 ## Strategies by Scenario
