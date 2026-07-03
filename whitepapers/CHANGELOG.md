@@ -11,6 +11,29 @@ Suivi des versions des ebooks, indépendamment de la version du guide.
 
 ---
 
+## [2026-07-02] v3.41.1: Content freshness pass, 13 whitepapers EN
+
+Same deep-dive audit and fix method applied to FR (13 dedicated sub-agents, one per whitepaper) extended to the EN series after FR/EN drift was flagged. Same class of gaps confirmed present in EN: WP04 and WP07 had the identical "sub-agents cannot spawn sub-agents (depth=1)" factual error, WP08 was missing the same 450-line Advanced Orchestration Patterns section, WP11 was missing the same Agentic Metrics section, WP12 was missing the same 4 evaluation subsections. Every fix was independently verified line-by-line post-edit (not just a version-field bump) after an earlier FR fix pass on WP00 was found to have missed its series-list correction despite a clean version bump. All 13 EN whitepapers corrected, PDF+EPUB rebuilt. `whitepapers/en/05-team.qmd` confirmed untracked by git (blanket `whitepapers/` gitignore rule, unlike sibling files), flagged but not fixed in this pass.
+
+### Fixed
+- **WP04 EN** (Architecture, v1.3.0 → v1.4.0): same factual error as FR, 4 occurrences of "depth=1" sub-agent claim corrected to 5 levels (v2.1.172). Sonnet 5 and Fable 5 added to model/knowledge-cutoff tables. Footer version mismatch and series count fixed.
+- **WP07 EN** (Reference Guide, v1.3.0 → v1.4.0): same "depth=1" error corrected. Sonnet 5 added, Dynamic Workflows section added, 4 previously-unreferenced guide pages linked (agent-harness, memory-systems, hooks-events-reference, tools-reference). Series count and footer version fixed.
+- **WP02 EN** (Customization, v1.4.0 → v1.5.0): same commands→skills internal contradiction as FR fixed in the Recommended Structure tree and Memory Loading Comparison table.
+- **WP09 EN** (Learning with AI, v1.2.0 → v1.3.0): Agent Adoption Curve table replaced with the guide's real 7-level scale (was inventing labels matching no guide table, same pre-existing bug as FR). Deleuze/Lepine practitioner paragraphs added.
+- **WP01 EN** (Effective Prompts, v1.2.0 → v1.3.0): additionally found and fixed 3-4 dead internal section links caused by guide renumbering, not present in the FR audit brief.
+
+### Added
+- **WP00 EN** (Series Introduction, v1.4.0 → v1.5.0): series footer corrected to list all 13 whitepapers (was 12, WP12 missing, WP04/06/10 wrongly marked "coming soon"). Stats and feature table (Opus 4.8, Fable 5, Sonnet 5, nested sub-agents) updated.
+- **WP03 EN** (Security, v1.3.0 → v1.4.0): threat-db reference updated v2.17.0 → v2.23.0, T030-T033 and 4 CVEs added, WASM MCP sandboxing (§7b) added, `sandbox.credentials` added. Additionally found stale malicious-author/skill counts affecting both FR and EN (6 authors not 5, ClawHavoc total 1,184 not 341+) and a new guide §1.6 missing from both languages.
+- **WP05 EN** (Team, v1.5.0 → v1.6.0): api-gateway.md, observability.md §10, and enterprise-governance.md §2.3 cross-references added, mirroring FR.
+- **WP06 EN** (Privacy, v1.2.0 → v1.3.0): 7-point audit checklist items and WASM MCP sandboxing added, mirroring FR.
+- **WP08 EN** (Agent Teams, v1.4.0 → v1.5.0): same 7 advanced orchestration patterns ported as FR, plus the same 4 IFTTD testimonials.
+- **WP10 EN** (AI Budget, v1.2.0 → v1.2.1): api-gateway.md cross-reference and pricing date stamp refreshed, mirroring FR.
+- **WP11 EN** (Team Metrics, v1.0.1 → v1.1.0): same "Agentic Metrics: What DORA Doesn't Measure" section ported as FR (METR, DeputyDev, c-CRAB, Code Review Bench, Strata/Zenity studies), self-hosted observability stack, PR Audit Trail summary.
+- **WP12 EN** (Agent Engineering, v1.0.0 → v1.1.0): same 4 missing "Evaluating Probabilistic Systems" subsections added as FR, plus a dynamic-workflows.md reference.
+
+---
+
 ## [2026-07-02] v3.41.1: Content freshness pass, 13 whitepapers FR
 
 Deep-dive content audit (13 dedicated sub-agents, one per whitepaper, cross-referenced against CHANGELOG `[Unreleased]` and `machine-readable/`) found content drift the earlier version-only check missed, including two factually wrong claims. All 13 FR whitepapers (00-12) corrected, `version` field synced to 3.41.1, PDF and EPUB rebuilt for all.

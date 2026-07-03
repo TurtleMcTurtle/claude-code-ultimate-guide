@@ -2,10 +2,10 @@
 title: "Architecture Demystified"
 subtitle: "No RAG, no black magic - just a loop"
 author: "Florian BRUNIAUX"
-date: 2026-05-12
+date: 2026-07-02
 date-format: "MMMM YYYY"
-version: "3.41.0"
-wp-version: "1.3.0"
+version: "3.41.1"
+wp-version: "1.4.0"
 series: "Claude Code Ultimate Guide"
 format:
   whitepaper-typst:
@@ -225,7 +225,7 @@ These 10 tools form the interface between the model's reasoning and the local fi
 | **Write** | Create/overwrite files | Must read first if exists |
 | **Grep** | Search within files | ripgrep-based |
 | **Glob** | Find files by pattern | Sorted by mtime |
-| **Task** | Spawn sub-agents | Isolated context, depth=1 |
+| **Task** | Spawn sub-agents | Isolated context, up to 5 levels deep |
 | **TodoWrite** | Track progress | Structured task management |
 | **LSP Tool** (v2.0.74+) | Code intelligence | Symbols, references, diagnostics |
 | **MultiEdit** (v2.1.18+) | Multi-file edits | Pattern replace across files |
@@ -522,25 +522,28 @@ Native tools operate within the main agent's context. But certain tasks (broad e
 ```
   Isolation Architecture
 
-  1. Main Agent  →  Task("Explore authentication patterns")
-  2. Sub-Agent      [Fresh context | Same tools (except Task) | Depth = 1]
-  3. Sub-Agent   →  Glob, Read, Grep...
-  4. Sub-Agent   →  Summary text only  →  Main Agent
-                    (Only the summary enters the context)
+  1. Main Agent      →  Sub-Agent (level 1)  : Task("Explore authentication patterns")
+                                                [Fresh context | Same tools except Task]
+  2. Sub-Agent (n1)  →  Sub-Agent (level 2)  : Task("Deep-dive OAuth flow")
+                                                [Up to 5 levels deep]
+  3. Sub-Agent (n2)  →  Sub-Agent (n2)       : Glob, Read, Grep...
+  4. Sub-Agent (n2)  →  Sub-Agent (n1)       : Summary text only
+  5. Sub-Agent (n1)  →  Main Agent           : Summary text only
+                                                (Only each level's summary bubbles up)
 ```
 
-Isolation is bidirectional: the sub-agent doesn't see the main agent's conversation history, and the main agent only receives the final summary. This means if the sub-agent reads 50 files (consuming 40K tokens in its context), only 200-1K tokens of summary return to the main context.
+Isolation is bidirectional: a sub-agent doesn't see its parent's conversation history, and the parent only receives the final summary from each child. This means if a sub-agent reads 50 files (consuming 40K tokens in its context), only 200-1K tokens of summary return to its parent's context, regardless of where it sits in the chain.
 
-## Why Depth = 1?
+## Why a Depth Limit of 5 Levels?
 
-Limiting sub-agents to one level prevents:
+Since v2.1.172 (June 2026), a sub-agent can spawn its own sub-agents, up to five levels deep. Before that release, depth was capped at 1: a sub-agent could call tools but never the Task tool itself. The 5-level cap serves the same goal as the old hard limit, containing the risk of runaway recursion, while unlocking real use cases like recursively decomposing a very broad exploration (an architecture agent that delegates each subsystem to a dedicated agent, which in turn delegates each module).
 
-| Risk | Explanation |
-|------|-------------|
-| Recursive explosion | Agent-ception would consume infinite resources |
-| Context pollution | Each level would accumulate context |
-| Debugging nightmare | Tracing multi-level chains is hard |
-| Unpredictable costs | Nested agents = unpredictable tokens |
+| Risk | Explanation | What the 5-level cap changes |
+|------|-------------|-------------------------------|
+| Recursive explosion | Agent-ception would consume infinite resources | The hard cap prevents unbounded chains, but five levels is still enough to trigger a combinatorial explosion if each level spawns several children in parallel |
+| Context pollution | Each level would accumulate context | Still true: only the summary bubbles up at each level, isolation protects the parent even on a deep chain |
+| Debugging nightmare | Tracing multi-level chains is hard | The risk grows with depth; tracing a 5-level chain needs observability Claude Code doesn't yet expose in fine detail |
+| Unpredictable costs | Nested agents = unpredictable tokens | Budget becomes harder to estimate upfront; in practice most tasks stay useful at 2-3 levels, beyond that the ROI drops fast |
 
 ## Sub-Agent Types
 
@@ -570,7 +573,7 @@ Leila is debugging a performance issue on the payment API. Rather than reading a
 
 **Status**: Experimental (v2.1.32+, Opus 4.8 recommended, Opus 4.6+ compatible)
 
-Sub-agents solve the context isolation problem but remain synchronous and limited to depth 1. For tasks requiring real coordination between multiple autonomous agents (each with its own 1M-token context window), Agent Teams represent the next step.
+Sub-agents solve the context isolation problem but remain synchronous, even with the 5-level depth cap. For tasks requiring real coordination between multiple autonomous agents (each with its own 1M-token context window), Agent Teams represent the next step.
 
 ## Lead-Teammate Architecture
 
@@ -930,9 +933,9 @@ The coding agent landscape evolves fast, but fundamental architectural differenc
 |-----------|-------------|--------------------------|--------|
 | **Architecture** | while(tool) loop | Cloud-based planning | Event-driven + cloud |
 | **Execution** | Local terminal | Cloud sandbox | Local + cloud |
-| **Model** | Claude (Sonnet 4.6 default, Opus 4.8) | GPT-4o/o3-mini/Claude | Multiple (adaptive) |
+| **Model** | Claude (Sonnet 5 default, Opus 4.8, Fable 5) | GPT-4o/o3-mini/Claude | Multiple (adaptive) |
 | **Context** | 200K–1M tokens | 128K–200K (model-dependent)^[GPT-4o: 128K, o3-mini and Claude via Copilot: 200K. Source: GitHub Copilot docs, Nov. 2025. Verified Feb. 2026.] | Not publicly disclosed |
-| **Thinking** | Opus 4.8 (xhigh default), Opus 4.6+ (auto-depth) | No | No |
+| **Thinking** | Opus 4.8 (xhigh default), Sonnet 5 and Opus 4.6+ (auto-depth) | No | No |
 | **Agent Teams** | Yes (experimental) | No | No |
 | **Transparency** | High (visible reasoning) | Medium | Medium |
 | **Custom** | CLAUDE.md + hooks + agents | Limited | Plugins |
@@ -971,6 +974,9 @@ Despite Anthropic's growing transparency, several internal aspects of Claude Cod
 
 | Model | Knowledge Cutoff |
 |-------|-----------------|
+| Sonnet 5 | Not published |
+| Opus 4.8 | Not published |
+| Fable 5 | Not published |
 | Sonnet 4.6 | August 2025 |
 | Opus 4.6 | May 2025 |
 | Haiku 4.5 | February 2025 |
@@ -1006,25 +1012,26 @@ Each whitepaper in the series is self-contained, but they complement each other.
 
 **Repository**: [github.com/FlorianBruniaux/claude-code-ultimate-guide](https://github.com/FlorianBruniaux/claude-code-ultimate-guide)
 
-*Version 3.40.0 | April 2026*
+*Version 3.41.1 | July 2026*
 
 # The Series
 
 This whitepaper is part of the **Claude Code Ultimate Guide** series, a complete resource for mastering Claude Code, from installation to production deployment.
 
-**12 whitepapers in the series:**
+**13 whitepapers in the series:**
 
 - **WP00** Introduction & Fundamentals
 - **WP01** Effective Prompts
 - **WP02** Customization & Configuration
 - **WP03** Security in Production
-- **WP04** Internal Architecture *(coming soon)*
+- **WP04** Internal Architecture
 - **WP05** Team Adoption
-- **WP06** Privacy & Compliance *(coming soon)*
+- **WP06** Privacy & Compliance
 - **WP07** Condensed Reference Guide
 - **WP08** Agent Teams & Sub-Agents
 - **WP09** Learning with AI (UVAL)
-- **WP10** AI Budget & ROI *(coming soon)*
+- **WP10** AI Budget & ROI
 - **WP11** Team Metrics in the AI Era
+- **WP12** Agent Engineering
 
 Full series available at [cc.bruniaux.com/whitepapers/](https://cc.bruniaux.com/whitepapers/)

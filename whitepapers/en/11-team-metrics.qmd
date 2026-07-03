@@ -2,10 +2,10 @@
 title: "Leading a Team in the Age of AI"
 subtitle: "Metrics, adoption, and governance for engineering managers"
 author: "Florian Bruniaux"
-date: 2026-05-12
+date: 2026-07-02
 date-format: "MMMM YYYY"
-version: "3.40.0"
-wp-version: "1.0.1"
+version: "3.41.1"
+wp-version: "1.1.0"
 series: "Claude Code Ultimate Guide"
 format:
   whitepaper-typst:
@@ -34,7 +34,7 @@ lang: en
 **Key takeaways**:
 
 - The 4 DORA metrics recalibrated for an AI context (and why they behave differently)
-- The 5 AI-specific signals that standard frameworks don't cover
+- The 5 AI-specific signals that standard frameworks don't cover, plus the agentic metrics DORA misses entirely
 - The minimal stack by team size: 5 tools for 5 people, not 20
 - The 6 vanity metrics to drop starting tomorrow
 :::
@@ -223,6 +223,60 @@ A proxy for code clarity and maintainability: ask reviewers to report how long i
 
 Rising comprehension time suggests code is becoming more complex or less well-organized over time, regardless of who wrote it. AI-generated code can inflate this metric by producing syntactically dense implementations that are harder to reason about than simpler, more explicit alternatives.
 
+# Agentic Metrics: What DORA Doesn't Measure
+
+DORA and SPACE were designed for deterministic software systems. Agents introduce non-determinism, probabilistic quality, and failure modes that fall through every existing metric category. Three groups of metrics fill that gap.
+
+## Why Standard DORA Is Insufficient for Agent Workflows
+
+DORA measures pipeline health, not output correctness. A study of 39 agent frameworks and 439 agentic applications (arXiv 2509.19185) found that 70% of test effort concentrates on deterministic components (tools, workflows) while less than 5% covers the LLM Plan Body, the central reasoning component most likely to produce incorrect results. Most DORA tooling has the same blind spot.
+
+A second structural gap: DORA doesn't capture the cost of the verification loop. Agent-generated PRs require at least as much review scrutiny as manually written code, and in practice more, because subtle behavioral errors can appear in syntactically correct code. Standard deployment frequency and lead time metrics look identical whether review is thorough or rubber-stamped.
+
+## Group 1: RCT-Verifiable Metrics
+
+These replicate what METR and DeputyDev measured. Run them on real tasks, not synthetic benchmarks. They give you numbers calibrated to your own team rather than vendor estimates.
+
+| Metric | What it measures | Published baseline |
+|--------|-----------------|-------------------|
+| Task completion time, AI vs. no AI | Actual speedup or slowdown for your task type | METR Study 1 (July 2025, arXiv 2507.09089): -19% for experienced developers on complex open-source repos. Perception gap: +39 points, developers believed they were 20% faster |
+| PR cycle time, AI-assisted vs. baseline | Pipeline throughput change | DeputyDev (arXiv 2509.19708): -31.8% PR cycle time (p=0.0018), n=300 engineers, 12 months |
+| Pass rate on PRs with executable tests as oracle | How often agent-generated code actually passes functional validation | c-CRAB (arXiv 2603.23448, March 2026): Claude Code 32.1% pass rate on real PRs. Union of four tools: 41.5%. This is the practical ceiling for current AI code review quality |
+
+The METR -19% figure applies specifically to L1-L2 workflows (Cursor Pro and Claude 3.5/3.7 Sonnet on complex existing repos). It is the only rigorous control-group measurement available for this context. Self-reported figures from McKinsey (20-45%), BCG (64%), and GitHub's own studies are not replicated under controlled conditions and should be treated as aspirational estimates, not planning inputs.
+
+## Group 2: Agentic Pipeline Metrics
+
+These require instrumentation via Langfuse, Arize Phoenix, or AWS Bedrock AgentCore. They do not replace DORA; they sit alongside it as a layer specific to non-deterministic systems.
+
+| Metric | What it measures | Reference |
+|--------|-----------------|-----------|
+| Spec quality score | Completeness and precision of specs before agent execution, a leading indicator for output quality | No standard rubric yet; define internally. Factory.ai's pre-implementation validation contracts are the closest documented proxy |
+| Validation contract pass rate | Percentage of agent-generated implementations that pass pre-defined behavioral contracts, measured before human review | Factory.ai Missions pattern: 81 problems detected in a Slack clone from spec alone, generating 34% of implementation work as fix features |
+| Agent task completion rate | Tasks the agent completes without human correction, expressed as a percentage | Instrument via harness logs. Anthropic's internal data shows the 99.9th-percentile task duration grew from 25 to 45 minutes between October 2025 and January 2026, indicating agents are handling more complex tasks |
+| Code review recall | Rate at which agent-generated review comments are acted on by developers | Code Review Bench (Martian, March 2026, 200,000+ open-source PRs): Augment Code 62.8% recall, GitHub Copilot 53.3% recall, Graphite 75% precision but only 8.8% recall |
+| Cost per completed task | Token spend plus human review time per agent task that reaches a mergeable state | No industry benchmark published yet. Track manually: tokens consumed, cost per model call, human review hours per task completion |
+| Tokens per feature | Average tokens consumed per merged feature, crossed with Jira or Linear ticket boundaries. A better signal than tokens per request because it accounts for session count variation per feature | No industry benchmark. Track via ccboard's project leaderboard (tokens per session times sessions per feature). Establish a baseline before optimizing; typical range for a complete PR is 500K-2M tokens on complex codebases |
+
+## Group 3: Agent Governance Metrics
+
+Sourced from Strata Identity Research 2026 and CSA/Zenity 2026. These reflect the state of organizational maturity rather than technical performance.
+
+| Metric | Target state | 2026 baseline for context |
+|--------|-------------|--------------------------|
+| Agents with named human sponsor | Every active agent has an identifiable owner | Only 28% of organizations can link agent actions to a human sponsor in all environments (Strata 2026) |
+| Real-time agent inventory coverage | All active agents appear in a central registry | 21% of organizations maintain a real-time inventory (Strata 2026) |
+| Credential rotation frequency | Agent credentials rotate at least every 90 days | 44% of organizations still use static API keys for agent authentication (Strata 2026) |
+| Permission violations detected | Violations detected as a share of estimated total violations | 53% of organizations have experienced an agent incident in the past 12 months; 58% took more than 5 hours to detect it (CSA/Zenity 2026) |
+
+## The Heavy-User Review Time Contradiction
+
+Digital Applied Q1 2026 (n=2,847 developers) found that heavy AI tool users spend 14-16 hours per week reviewing AI-generated code, compared to 11.4 hours per week for average users. This directly contradicts the narrative that AI reduces review burden. The most likely explanation: per-review unit efficiency may improve, but the volume of generated code grows faster than review capacity. Before committing to time-savings projections, measure your team's actual review time distribution across AI-generated and manually written PRs.
+
+## pass^k for Non-Deterministic Tests
+
+Standard pass@1 is insufficient for agent-generated code. A test that passes once may fail on the next run because the output is non-deterministic. Promptfoo and LangChain both document the pass^k pattern: run critical tests k times consecutively, typically 3 to 5. A test passes only if it passes all k runs. This is not flaky-test detection, it is a deliberate quality gate for probabilistic systems. Apply it specifically to agent-generated suites, not to the full regression suite where the overhead would be prohibitive.
+
 # Product Metrics
 
 Engineering metrics measure how code is built. Product metrics measure whether the code actually solves the right problems. Most engineering teams track the former and leave the latter entirely to product managers. That creates a blind spot where a team can ship fast, with strong DORA scores, while the product drifts away from user needs.
@@ -342,8 +396,9 @@ If collecting the metric requires manual work, it will be abandoned within 3 mon
 | Axify | Full engineering metrics suite, DORA + flow + team health | 15+ people | Canadian startup, strong SPACE coverage |
 | GitHub Insights | Basic activity metrics, free, native | Any size | Sufficient for 5-10 people, insufficient at scale |
 | Spreadsheet | Manual tracking, always works, zero setup | Fewer than 10 people | The right tool when automated setup overhead isn't justified |
+| LiteLLM + Loki + Tempo + Grafana | Self-hosted usage, cost, and trace aggregation | 25+ people, self-hosted requirement | LiteLLM Gateway logs usage server-side with zero client-side setup; Loki ingests session JSONL for file-level detail; Tempo correlates AI sessions with deployment traces via OTel; Grafana panels cover daily spend by team, request volume by model, and budget headroom via PromQL |
 
-No tool automatically surfaces the AI-specific metrics described above (CFR by code origin, review time comparison, comprehension signals). That requires either custom dashboards built on your CI/CD data or manual tracking. GitHub Analytics covers % AI-assisted code; the rest you'll need to wire up yourself.
+No tool automatically surfaces the AI-specific metrics described above (CFR by code origin, review time comparison, comprehension signals). That requires either custom dashboards built on your CI/CD data or manual tracking. GitHub Analytics covers % AI-assisted code; the rest you'll need to wire up yourself. Teams that can't send usage data to a third-party vendor should default to the self-hosted LiteLLM/Loki/Tempo/Grafana path instead of LinearB or Faros.ai.
 
 **Avoid tool proliferation.** A team with LinearB, Jira, GitHub Insights, and two separate analytics tools will spend more time reconciling numbers than acting on them. One DORA tool, one product analytics tool, GitHub Analytics for AI-specific data.
 
@@ -396,6 +451,10 @@ Review the full stack quarterly and prune ruthlessly. Any metric that hasn't gui
 :::
 
 The temptation is to want everything from the start. A metrics stack, like a codebase, accumulates debt when it grows faster than the team's capacity to act on it. Build it in phases, prune regularly, and keep the 4-question test as a permanent filter.
+
+## PR Audit Trail
+
+For regulated environments and compliance-conscious orgs, a PR audit trail captures four things at PR creation: the tool call log (which tools Claude used and on which files), the list of files modified with before/after line counts, session metadata (session ID, timestamp, Claude Code version, model), and a hash of the active CLAUDE.md rules. A PreToolUse hook writes this to a daily JSONL log, a GitHub Actions step uploads it as a 90-day artifact on each PR, and a periodic compliance script aggregates tool usage and unique files touched across a date range. This gives auditors a structured "what did Claude do during this change" answer without relying on session memory.
 
 # See Also
 

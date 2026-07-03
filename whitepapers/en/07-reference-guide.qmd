@@ -2,10 +2,10 @@
 title: "Claude Code: The Reference Guide"
 subtitle: "Complete synthesis + advanced workflows"
 author: "Florian BRUNIAUX"
-date: 2026-05-12
+date: 2026-07-02
 date-format: "MMMM YYYY"
-version: "3.41.0"
-wp-version: "1.3.0"
+version: "3.41.1"
+wp-version: "1.4.0"
 series: "Claude Code Ultimate Guide"
 format:
   whitepaper-typst:
@@ -503,6 +503,8 @@ In addition to CLAUDE.md instruction files, Claude Code has an **auto-persistent
 | `user` | `~/.claude/MEMORY.md` | All your projects |
 | `project` | `.claude/MEMORY.md` | This project (versionable) |
 | `local` | `.claude/MEMORY.local.md` | This project, you only (gitignored) |
+
+*-> To go deeper on memory architecture, cross-session tools, and team sharing patterns: `guide/core/memory-systems.md`*
 
 ## Reading Order
 
@@ -1044,6 +1046,8 @@ if [[ "$FILE" == *.ts || "$FILE" == *.tsx ]]; then
 fi
 ```
 
+*-> Full event list, matcher syntax, and exit-code behavior per hook: `guide/core/hooks-events-reference.md`*
+
 ## Todo as Instruction Mirrors
 
 TodoWrite isn't just tracking --- it's an instruction mechanism. Well-written todos guide Claude's execution.
@@ -1235,7 +1239,7 @@ You: "What did the research find?"
 | Test generation | Review/debug main code |
 | Documentation scraping | Plan architecture |
 
-**Limitation**: Max depth=1 (no sub-agents of sub-agents).
+**Nesting**: Sub-agents can spawn their own sub-agents, up to 5 levels of depth (since v2.1.172).
 
 ## Agent Teams (since v2.1.32)
 
@@ -1277,6 +1281,27 @@ Workflow:
 - Simple tasks (unjustified overhead)
 - Limited budgets (cost increases with agent count)
 - Rapid iterations (coordination slows things down)
+
+*-> For persisting decisions and conventions across a team's agents: `guide/ecosystem/team-knowledge-base.md`. For field-tested practitioner patterns from production usage: `guide/ecosystem/practitioner-insights.md`.*
+
+## Dynamic Workflows (since v2.1.154)
+
+*-> To go deeper: `guide/workflows/dynamic-workflows.md`*
+
+**Purpose**: JavaScript scripts that orchestrate tens to hundreds of subagents in one session, with deterministic control flow and automatic resume on interruption.
+
+A dynamic workflow is a `.js` file exporting a `meta` object and a default execution function. The runtime injects four primitives into scope: `agent` (spawn one subagent), `parallel` (fan out subagents concurrently), `pipeline` (chain stages sequentially), and `phase` (group steps under a named UI header). The orchestrator script itself consumes zero tokens; only the `agent()` calls inside it cost tokens.
+
+**Trigger keyword**: `ultracode` (renamed from `workflow` in v2.1.160 -- existing scripts using the old keyword must be updated). **Monitor**: `/workflows`.
+
+| Criterion | Agent tool | Skill | Dynamic Workflow |
+|-----------|-----------|-------|-------------------|
+| Parallelism | No | No | Yes |
+| Resume on interruption | No | No | Yes |
+| Structured data handoff | Manual | Manual | Built-in (schema validation) |
+| Orchestrator token cost | Moderate | Moderate | Zero |
+
+**When to use**: three or more of the following hold -- multi-stage task, some stages parallelizable, long enough that resume matters, reproducibility required, or structured JSON handoff needed between stages. For a single subagent doing one thing, use the Agent tool directly; for a reusable procedure where Claude picks the steps, use a Skill.
 
 ## Auto-Memories (since v2.1.32)
 
@@ -1593,6 +1618,8 @@ Claude Code executes shell commands with the same permissions as your system use
 | **Context Manipulation** | History exploitation | Model confusion, security bypass |
 | **.claude/ Attack Surface** | Modified CLAUDE.md, agents, hooks files | Persistence of malicious instructions |
 | **Agent Skills Supply Chain** | Compromised MCP/skills dependencies (e.g., slopsquatting, CVE-2026-23744) | Unverified third-party code execution |
+
+*-> For the nine-component harness architecture (permission enforcement, the lethal trifecta security model, observability stack) behind reliable production agents: `guide/core/agent-harness.md`*
 
 ## Top 5 Security Hooks
 
@@ -2045,10 +2072,12 @@ These commands were added incrementally between v2.1.71 and v2.1.77. They cover 
 | Model | `/model` alias | Knowledge cutoff |
 |-------|---------------|-----------------|
 | Claude Opus 4.8 | `opus` | Current |
+| Claude Sonnet 5 | `sonnet` (default since v2.1.197) | January 2026 |
 | Claude Fable 5 | `claude-fable-5` | June 2026 |
-| Claude Sonnet 4.6 | `sonnet` | August 2025 |
 | Claude Opus 4.6 | (previous gen) | May 2025 |
 | Claude Haiku 4.5 | `haiku` | February 2025 |
+
+Claude Sonnet 5 became the **default model** for Claude Code in v2.1.197, with native 1M-token context and promotional pricing. The `sonnet` alias now resolves to Sonnet 5, not the older 4.6 generation.
 
 ## Keyboard Shortcuts
 
@@ -2252,6 +2281,8 @@ These tools integrate with Claude Code via MCP or slash commands to extend its c
 | Context7 | Documentation | Via MCP |
 | Sequential Thinking | Complex analysis | Via MCP |
 
+For a broader survey of third-party tools in the ecosystem (session managers, observability, MCP servers), see `guide/ecosystem/agentic-tools.md`.
+
 ## Community
 
 - Discord Claude Code: https://discord.gg/anthropic
@@ -2262,7 +2293,7 @@ These tools integrate with Claude Code via MCP or slash commands to extend its c
 
 *This Reference Guide synthesizes the 7 whitepapers of the Claude Code Ultimate Guide series and adds original content on migration, IDE integration, Git, advanced patterns, and development methodologies.*
 
-*Version 3.40.0 --- April 2026 (updated: `xhigh` effort level Opus 4.7, auto mode Max without flag, `/ultrareview`, `/less-permission-prompts`, read-only glob patterns skip permission prompts)*
+*Version 3.41.1 --- July 2026 (updated: Sonnet 5 default model, Dynamic Workflows, sub-agent nesting up to 5 levels, `/ultrareview`, `/less-permission-prompts`, read-only glob patterns skip permission prompts)*
 
 ---
 
@@ -2281,7 +2312,7 @@ These tools integrate with Claude Code via MCP or slash commands to extend its c
 
 This whitepaper is part of the **Claude Code Ultimate Guide** series, a complete resource for mastering Claude Code, from installation to production deployment.
 
-**12 whitepapers in the series:**
+**13 whitepapers in the series:**
 
 - **WP00** Introduction & Fundamentals
 - **WP01** Effective Prompts
@@ -2295,5 +2326,6 @@ This whitepaper is part of the **Claude Code Ultimate Guide** series, a complete
 - **WP09** Learning with AI (UVAL)
 - **WP10** AI Budget & ROI *(coming soon)*
 - **WP11** Team Metrics in the AI Era
+- **WP12** Agent Engineering
 
 Full series available at [cc.bruniaux.com/whitepapers/](https://cc.bruniaux.com/whitepapers/)

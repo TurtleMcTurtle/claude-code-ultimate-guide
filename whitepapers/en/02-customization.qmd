@@ -2,10 +2,10 @@
 title: "Customizing Claude"
 subtitle: "CLAUDE.md, Agents, Skills: Your Tailor-Made Assistant"
 author: "Florian BRUNIAUX"
-date: 2026-05-12
+date: 2026-07-02
 date-format: "MMMM YYYY"
-version: "3.41.0"
-wp-version: "1.4.0"
+version: "3.41.1"
+wp-version: "1.5.0"
 series: "Claude Code Ultimate Guide"
 format:
   whitepaper-typst:
@@ -416,6 +416,8 @@ The Auto-Memory feature creates these files automatically from conversation. For
 **Verify**: At the start of the next session, check that Claude remembers your latest preferences without re-specifying them.
 :::
 
+**Auto Dream: consolidating memory in the background**. Left uncurated past 20+ sessions, Auto-Memories degrades: stale context, contradictory facts, relative dates that stop meaning anything two weeks later. Auto Dream runs as a background sub-agent between sessions to fix that, triggered once at least 24 hours and 5 sessions have passed since the last consolidation. It rereads MEMORY.md and topic files, greps session transcripts for signal, merges and deduplicates facts, converts relative dates to absolute ones, and rebuilds MEMORY.md under the 200-line cap. Write access is limited to memory files; project source code stays read-only. This is a community-discovered feature (not in official Anthropic release notes), gated behind a server-side flag and rolling out gradually since v2.1.83+.
+
 > **Note**: Auto-memories is actively evolving; expect refinements in upcoming versions. Current behaviors may change.
 
 {{< pagebreak >}}
@@ -746,6 +748,7 @@ Three distinct mechanisms, often confused. Here are the operational differences:
 |-----------|---------|-------|----------------|-----------------|
 | **Agent** | Task tool / Claude invocation | Isolated session | One-shot audit, parallel processing | `dep-auditor` on package.json |
 | **Skill** | `/name` (user) or auto (model) | Shared across agents | Reusable knowledge or workflow | `security-guardian` OWASP |
+| **Dynamic Workflow** | `workflow()` call, JS file | Multi-stage, parallel or resumable | Multi-step pipeline with structured data handoff | Release pipeline chaining tests, build, changelog |
 
 **Quick selection rule**:
 
@@ -753,6 +756,7 @@ Three distinct mechanisms, often confused. Here are the operational differences:
 - A skill or workflow needs to be reusable → **Skill**
   - User triggers manually → `disable-model-invocation: true`
   - Model detects the need → leave the default (model-invocable)
+- Multiple stages feed into each other, some run in parallel, or the job needs resume-on-interruption → **Dynamic Workflow**
 
 ::: {.callout-note title="Common anti-pattern: wrong invocation configuration"}
 Confusing user-invocable and model-invocable skills is the most frequent mistake since the CC 2.1.3 merge. Signal: if a human types the slash manually every time → add `disable-model-invocation: true`. If you want the model to load the skill automatically based on context → leave the default.
@@ -918,7 +922,7 @@ mkdir -p "$CACHE_DIR"
 
 ## What is a User-Invocable Skill?
 
-Since CC 2.1.3, custom "commands" live in `.claude/skills/` rather than `.claude/commands/`. A user-invocable skill works exactly like a legacy command — the user types `/skill-name` — but it benefits from the same frontmatter syntax as all other skills. To restrict invocation to the user only, add `disable-model-invocation: true`.
+Since CC 2.1.3, custom "commands" live in `.claude/skills/` rather than `.claude/commands/`. A user-invocable skill works exactly like a legacy command (the user types `/skill-name`), but it benefits from the same frontmatter syntax as all other skills. To restrict invocation to the user only, add `disable-model-invocation: true`.
 
 ### Built-in Commands
 
@@ -955,7 +959,7 @@ Create your own user-invocable skills in `.claude/skills/`:
 ```
 .claude/skills/
 ├── release/
-│   └── SKILL.md    # /release — disable-model-invocation: true
+│   └── SKILL.md    # /release, disable-model-invocation: true
 ├── tech/           # Dev workflows
 │   ├── commit/
 │   │   └── SKILL.md
@@ -1104,8 +1108,7 @@ Understanding **when** each memory method loads is critical for token optimizati
 | `CLAUDE.md` | Session start | Always | Core project context |
 | `.claude/rules/*.md` | Session start (ALL files) | Always | Always-applicable conventions |
 | `@path/to/file.md` | On-demand (when referenced) | Only when used | Optional/conditional context |
-| `.claude/commands/*.md` | Invocation only | Only when invoked | Workflow templates |
-| `.claude/skills/*.md` | Invocation only | Only when invoked | Domain knowledge modules |
+| `.claude/skills/*.md` | Invocation only | Only when invoked | Domain knowledge modules and workflow templates (user-invocable or model-invocable) |
 
 **Key insight**: `.claude/rules/` is NOT on-demand. Every `.md` file in that directory loads at startup, consuming tokens. Reserve it for always-relevant conventions, not rarely-used guidelines.
 
@@ -1364,12 +1367,12 @@ Here is the complete directory tree of a well-configured project. Files marked f
 ├── settings.local.json    # Personal permissions (gitignored)
 ├── agents/                # Custom agents
 │   └── code-reviewer.md
-├── commands/              # Slash commands
+├── skills/                # Knowledge modules + slash commands (since CC 2.1.3)
+│   ├── security-guardian/
+│   │   └── SKILL.md
 │   └── tech/
-│       └── commit.md
-├── skills/                # Knowledge modules
-│   └── security-guardian/
-│       └── SKILL.md
+│       └── commit/
+│           └── SKILL.md
 └── rules/                 # Auto-load at session start (since Claude Code 1.0.x)
     ├── code-conventions.md    # Style, naming (50-100 lines)
     ├── git-workflow.md        # Commits, branching
@@ -1398,7 +1401,7 @@ Personal permission overrides (gitignored):
 
 **Git Rules**:
 
-- Commit: `settings.json` (team), `agents/`, `commands/`, `hooks/`, `skills/`, `rules/`
+- Commit: `settings.json` (team), `agents/`, `hooks/`, `skills/`, `rules/`
 - Gitignore: `settings.local.json` (personal), `CLAUDE.md` (local), `.serena/`
 
 ## Recommended Reading Path
@@ -1418,7 +1421,7 @@ Personal permission overrides (gitignored):
 
 **Repository**: [github.com/FlorianBruniaux/claude-code-ultimate-guide](https://github.com/FlorianBruniaux/claude-code-ultimate-guide)
 
-*Version 3.40.0 | April 2026*
+*Version 3.41.1 | July 2026*
 
 # The Series
 
