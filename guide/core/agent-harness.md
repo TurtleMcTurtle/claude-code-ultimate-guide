@@ -1,6 +1,6 @@
 ---
-title: "Agent Harness Engineering"
-description: "The nine-component infrastructure that turns a raw LLM into a reliable production agent — from while-loop engine to permission enforcement"
+title: "Code as Agent Harness (arXiv 2605.18747): Agent Harness Engineering"
+description: "A practical companion to the Code as Agent Harness paper (arXiv 2605.18747): the nine components that turn a raw LLM into a reliable production agent, from while-loop engine to permission enforcement."
 tags: [guide, agents, architecture, security, observability]
 ---
 
