@@ -1,6 +1,6 @@
 ---
 title: "Claude Code Privacy: What Gets Sent to Anthropic & How to Control It"
-description: "What Claude Code sends to Anthropic servers: code context, file paths, shell commands, MCP logs. Data retention by plan (Consumer 5 yr, ZDR 0 days). Practical controls via env vars and PreToolUse hooks."
+description: "What Claude Code sends to Anthropic servers: code context, shell commands, MCP logs. Data usage and retention by plan (Consumer 5 yr, ZDR 0 days), whether your code trains models, and how to control it."
 tags: [privacy, security, guide]
 ---
 
