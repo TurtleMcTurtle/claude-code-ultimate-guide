@@ -1,11 +1,8 @@
 name: Rebuild Guide Exports (PDF + EPUB)
 
 on:
-  schedule:
-    # Daily at 03:00 UTC
-    - cron: "0 3 * * *"
   push:
-    branches: ["main"]
+    branches: ["release"]
     paths:
       - "guide/ultimate-guide.md"
       - "whitepapers/guide-export.qmd"
